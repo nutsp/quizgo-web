@@ -62,6 +62,12 @@ export function ExamResultView({ examSetCode }: ExamResultViewProps) {
     };
   }, [attemptId]);
 
+  useEffect(() => {
+    if (!loading && review && typeof window !== "undefined" && window.location.hash === "#review") {
+      document.getElementById("review")?.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [loading, review]);
+
   if (loading) {
     return (
       <div className="flex min-h-[60vh] flex-col items-center justify-center gap-3 text-muted">
@@ -141,7 +147,7 @@ export function ExamResultView({ examSetCode }: ExamResultViewProps) {
         </CardContent>
       </Card>
 
-      <section>
+      <section id="review">
         <h2 className="mb-4 text-lg font-bold text-foreground">ตรวจทานข้อสอบ</h2>
         <div className="space-y-4">
           {review.questions.map((q) => {

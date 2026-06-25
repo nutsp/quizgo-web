@@ -17,7 +17,7 @@ const authTabs = [
   { href: "/", label: "หน้าแรก", icon: Home },
   { href: "/exams", label: "ข้อสอบ", icon: BookOpen },
   { href: "#", label: "แผนฝึก", icon: Target },
-  { href: "/exams/demo/result", label: "ผลสอบ", icon: ClipboardList },
+  { href: "/my-results", label: "ผลสอบ", icon: ClipboardList },
   { href: "#", label: "โปรไฟล์", icon: User },
 ];
 
@@ -27,8 +27,9 @@ export function MobileBottomNav() {
 
   const isExamTaking = pathname.includes("/take");
   const isAuthPage = pathname === "/login" || pathname === "/register";
+  const isAdminPage = pathname.startsWith("/admin");
 
-  if (isExamTaking || isAuthPage) return null;
+  if (isExamTaking || isAuthPage || isAdminPage) return null;
 
   const tabs = isAuthenticated ? authTabs : guestTabs;
 
@@ -40,7 +41,9 @@ export function MobileBottomNav() {
           const isActive =
             tab.href === "/"
               ? pathname === "/"
-              : pathname.startsWith(tab.href) && tab.href !== "#";
+              : tab.href === "/my-results"
+                ? pathname.startsWith("/my-results")
+                : pathname.startsWith(tab.href) && tab.href !== "#";
 
           return (
             <Link

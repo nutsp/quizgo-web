@@ -1,8 +1,14 @@
 import { apiDelete, apiGet, apiPost, apiPut } from "@/lib/api";
 import type {
+  ExamSetItem,
+  ExamSetResultDetail,
+  ExamTrackResultDetail,
+  ExamTrackResultSummary,
   GetAttemptResponse,
   HomeResponse,
   LoginResponse,
+  MyResultsSummary,
+  PaginatedAttempts,
   PaginatedExamSets,
   ResultResponse,
   ReviewResponse,
@@ -34,6 +40,10 @@ export function getHome(auth = true) {
 export function listExamSets(params?: Record<string, string>) {
   const query = params ? `?${new URLSearchParams(params)}` : "";
   return apiGet<PaginatedExamSets>(`/exam-sets${query}`);
+}
+
+export function getExamSet(examSetCode: string) {
+  return apiGet<ExamSetItem>(`/exam-sets/${examSetCode}`);
 }
 
 export function startAttempt(examSetCode: string) {
@@ -71,4 +81,25 @@ export function getResult(attemptId: string) {
 
 export function getReview(attemptId: string) {
   return apiGet<ReviewResponse>(`/attempts/${attemptId}/review`, true);
+}
+
+export function getMyResultsSummary() {
+  return apiGet<MyResultsSummary>("/me/results/summary", true);
+}
+
+export function getMyExamTrackResults() {
+  return apiGet<ExamTrackResultSummary[]>("/me/results/exam-tracks", true);
+}
+
+export function getMyExamTrackResultDetail(trackCode: string) {
+  return apiGet<ExamTrackResultDetail>(`/me/results/exam-tracks/${trackCode}`, true);
+}
+
+export function listMyAttemptResults(params?: Record<string, string>) {
+  const query = params ? `?${new URLSearchParams(params)}` : "";
+  return apiGet<PaginatedAttempts>(`/me/results${query}`, true);
+}
+
+export function getMyExamSetResultDetail(examSetCode: string) {
+  return apiGet<ExamSetResultDetail>(`/me/results/exam-sets/${examSetCode}`, true);
 }

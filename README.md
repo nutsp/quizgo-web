@@ -54,20 +54,27 @@ npm run dev
 | `/login` | เข้าสู่ระบบ | Guest |
 | `/register` | สมัครสมาชิก | Guest |
 | `/exams` | คลังข้อสอบ | ไม่บังคับ |
-| `/exams/demo/take` | ทำข้อสอบจำลอง | ต้อง login |
-| `/exams/demo/result` | ผลสอบ | ต้อง login |
+| `/exams/[examSetCode]` | รายละเอียดชุดข้อสอบ | ไม่บังคับ |
+| `/exams/[examSetCode]/take` | ทำข้อสอบ (ต้องมี `attempt_id`) | ต้อง login |
+| `/exams/[examSetCode]/result` | ผลสอบ | ต้อง login |
+| `/exams/demo/take` | alias ทำข้อสอบ (backward compat) | ต้อง login |
+| `/exams/demo/result` | alias ผลสอบ | ต้อง login |
 
 ## Test Flow
 
-1. เปิด `/register` และสร้างบัญชี
-2. Login (หรือ auto-login หลัง register ถ้า backend คืน token)
-3. เปิด `/` — ควรเห็น "ยินดีต้อนรับ, {display_name}"
-4. เปิด `/exams` และกดเริ่มสอบ
-5. ทำข้อสอบที่ `/exams/demo/take` (กดค้างเพื่อฝนคำตอบ)
-6. ส่งคำตอบ → redirect ไป `/exams/demo/result?attempt_id=...`
-7. ดูผลจาก API
-8. Logout จาก Navbar
-9. ลองเปิด `/exams/demo/take` → redirect ไป `/login`
+1. เปิด `/exams` — ควรเห็นการ์ดพร้อม cover image และราคา
+2. คลิกการ์ด → `/exams/gpor-set-1`
+3. คลิก **เริ่มทำข้อสอบ** → modal คำแนะนำ
+4. ติ๊ก "ฉันอ่านและเข้าใจคำแนะนำแล้ว" → **เริ่มสอบ**
+5. Redirect ไป `/exams/gpor-set-1/take?attempt_id=...`
+6. ทำข้อสอบ (กดค้างเพื่อฝนคำตอบ) → ส่งคำตอบ
+7. ดูผลที่ `/exams/gpor-set-1/result?attempt_id=...`
+
+### Auth flow
+
+1. เปิด `/register` และสร้างบัญชี (หรือใช้ demo account)
+2. จากหน้ารายละเอียดชุดข้อสอบ กดเริ่มสอบ — ถ้ายังไม่ login จะ redirect ไป `/login?redirect=/exams/{code}`
+3. Logout แล้วลองเปิด `/exams/gpor-set-1/take` โดยไม่มี `attempt_id` → redirect กลับหน้ารายละเอียด
 
 ### Demo account (จาก backend seed)
 
@@ -110,6 +117,7 @@ src/
 | GET | `/auth/me` | Yes |
 | GET | `/home` | Optional |
 | GET | `/exam-sets` | No |
+| GET | `/exam-sets/:code` | No |
 | POST | `/exam-sets/:code/attempts` | Yes |
 | PUT | `/attempts/:id/answers/:no` | Yes |
 | POST | `/attempts/:id/submit` | Yes |

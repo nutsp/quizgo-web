@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { ChevronLeft, ChevronRight, Loader2, SlidersHorizontal, X } from "lucide-react";
-import { ExamCard } from "@/components/ExamCard";
+import { ExamSetCard } from "@/components/exam/ExamSetCard";
+import { StartExamModal } from "@/components/exam/StartExamModal";
 import { FilterSidebar } from "@/components/FilterSidebar";
 import { SearchBar } from "@/components/SearchBar";
 import { Button } from "@/components/ui/button";
@@ -13,18 +14,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import type { Exam } from "@/data/exams";
 import { sortOptions } from "@/data/exams";
 import { listExamSets } from "@/lib/api/endpoints";
-import { mapExamSetToExam } from "@/lib/api/mappers";
+import { mapExamSetItemToExamSet } from "@/lib/api/mappers";
+import type { ExamSet } from "@/lib/exam/format";
 
 export default function ExamLibraryPage() {
   const [showFilters, setShowFilters] = useState(false);
   const [sort, setSort] = useState("recommended");
   const [currentPage, setCurrentPage] = useState(1);
-  const [exams, setExams] = useState<Exam[]>([]);
+  const [examSets, setExamSets] = useState<ExamSet[]>([]);
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
+  const [startExamSet, setStartExamSet] = useState<ExamSet | null>(null);
+  const [modalOpen, setModalOpen] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -34,14 +37,14 @@ export default function ExamLibraryPage() {
       try {
         const data = await listExamSets({
           page: String(currentPage),
-          limit: "8",
+          limit: "9",
         });
         if (!cancelled) {
-          setExams(data.items.map(mapExamSetToExam));
+          setExamSets(data.items.map(mapExamSetItemToExamSet));
           setTotalPages(Math.max(1, data.total_pages));
         }
       } catch {
-        if (!cancelled) setExams([]);
+        if (!cancelled) setExamSets([]);
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -52,6 +55,11 @@ export default function ExamLibraryPage() {
       cancelled = true;
     };
   }, [currentPage]);
+
+  const handleStart = (examSet: ExamSet) => {
+    setStartExamSet(examSet);
+    setModalOpen(true);
+  };
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 lg:px-8">
@@ -97,16 +105,16 @@ export default function ExamLibraryPage() {
         </div>
 
         <div className="flex-1">
-          <p className="mb-4 text-sm text-muted">แสดง {exams.length} ชุดข้อสอบ</p>
+          <p className="mb-4 text-sm text-muted">แสดง {examSets.length} ชุดข้อสอบ</p>
 
           {loading ? (
             <div className="flex justify-center py-16 text-muted">
               <Loader2 className="h-8 w-8 animate-spin" />
             </div>
           ) : (
-            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-2">
-              {exams.map((exam) => (
-                <ExamCard key={exam.id} exam={exam} showDetailButton />
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {examSets.map((examSet) => (
+                <ExamSetCard key={examSet.code} examSet={examSet} onStart={handleStart} />
               ))}
             </div>
           )}
@@ -162,6 +170,12 @@ export default function ExamLibraryPage() {
           </div>
         </div>
       )}
+
+      <StartExamModal
+        examSet={startExamSet}
+        open={modalOpen}
+        onOpenChange={setModalOpen}
+      />
     </div>
   );
 }

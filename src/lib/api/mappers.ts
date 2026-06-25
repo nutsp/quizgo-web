@@ -1,32 +1,31 @@
-import type { Exam, Difficulty, ExamFormat } from "@/data/exams";
 import type { ExamSetItem } from "./types";
+import type { ExamSet } from "@/lib/exam/format";
 
-const DIFFICULTY_MAP: Record<string, Difficulty> = {
-  easy: "ง่าย",
-  medium: "กลาง",
-  hard: "ยาก",
-};
+export function mapExamSetItemToExamSet(item: ExamSetItem): ExamSet {
+  const track =
+    item.exam_track ??
+    (item.exam_track_code
+      ? { code: item.exam_track_code, name: item.exam_track_name ?? "" }
+      : undefined);
 
-const MODE_MAP: Record<string, ExamFormat> = {
-  mock_exam: "Mock Exam",
-  practice: "Practice",
-};
-
-export function mapExamSetToExam(set: ExamSetItem): Exam {
   return {
-    id: set.id,
-    title: set.title,
-    description: set.description ?? "",
-    category: (set.exam_track_name as Exam["category"]) ?? "เสมือนจริง",
-    subjects: [],
-    format: MODE_MAP[set.mode] ?? "Mock Exam",
-    questionCount: set.total_questions,
-    durationMinutes: set.duration_minutes,
-    difficulty: DIFFICULTY_MAP[set.difficulty] ?? "กลาง",
-    passingScore: set.passing_score,
-    attemptCount: 0,
-    isFree: set.access_type === "free",
-    slug: set.code,
+    id: item.id,
+    code: item.code,
+    title: item.title,
+    description: item.description ?? "",
+    cover_image_url: item.cover_image_url,
+    duration_minutes: item.duration_minutes,
+    total_questions: item.total_questions,
+    passing_score: item.passing_score,
+    difficulty: item.difficulty,
+    access_type: item.access_type,
+    price_amount: item.price_amount ?? 0,
+    sale_price_amount: item.sale_price_amount,
+    currency: item.currency ?? "THB",
+    mode: item.mode,
+    is_official: item.is_official ?? false,
+    is_featured: item.is_featured,
+    exam_track: track,
   };
 }
 

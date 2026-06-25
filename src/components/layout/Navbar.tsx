@@ -24,7 +24,7 @@ const guestLinks = [
 const authLinks = [
   { href: "/", label: "หน้าแรก" },
   { href: "/exams", label: "คลังข้อสอบ" },
-  { href: "/exams/demo/result", label: "ผลสอบของฉัน" },
+  { href: "/my-results", label: "ผลสอบของฉัน" },
   { href: "#", label: "ราคา" },
 ];
 
@@ -44,8 +44,9 @@ export function Navbar() {
 
   const isExamTaking = pathname.includes("/take");
   const isAuthPage = pathname === "/login" || pathname === "/register";
+  const isAdminPage = pathname.startsWith("/admin");
 
-  if (isExamTaking || isAuthPage) return null;
+  if (isExamTaking || isAuthPage || isAdminPage) return null;
 
   const navLinks = isAuthenticated ? authLinks : guestLinks;
 
@@ -62,7 +63,7 @@ export function Navbar() {
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-sm font-bold text-white">
               ส
             </div>
-            <span className="text-lg font-bold text-primary">สนามสอบเสมือนจริง</span>
+            {/* <span className="text-lg font-bold text-primary">สนามสอบเสมือนจริง</span> */}
           </Link>
 
           <nav className="hidden items-center gap-1 lg:flex">
@@ -72,7 +73,10 @@ export function Navbar() {
                 href={link.href}
                 className={cn(
                   "rounded-lg px-3 py-2 text-sm font-medium transition-colors hover:bg-background hover:text-primary",
-                  pathname === link.href ? "bg-primary/10 text-primary" : "text-muted"
+                  pathname === link.href ||
+                  (link.href === "/my-results" && pathname.startsWith("/my-results"))
+                    ? "bg-primary/10 text-primary"
+                    : "text-muted"
                 )}
               >
                 {link.label}
@@ -116,8 +120,13 @@ export function Navbar() {
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <Link href="/exams/demo/result">ผลสอบของฉัน</Link>
+                    <Link href="/my-results">ผลสอบของฉัน</Link>
                   </DropdownMenuItem>
+                  {user?.role === "admin" && (
+                    <DropdownMenuItem asChild>
+                      <Link href="/admin">แดชบอร์ดผู้ดูแล</Link>
+                    </DropdownMenuItem>
+                  )}
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleLogout} className="text-danger focus:text-danger">
                     <LogOut className="h-4 w-4" />
@@ -158,7 +167,10 @@ export function Navbar() {
               onClick={() => setMobileOpen(false)}
               className={cn(
                 "block rounded-lg px-3 py-2.5 text-sm font-medium",
-                pathname === link.href ? "bg-primary/10 text-primary" : "text-muted"
+                pathname === link.href ||
+                  (link.href === "/my-results" && pathname.startsWith("/my-results"))
+                  ? "bg-primary/10 text-primary"
+                  : "text-muted"
               )}
             >
               {link.label}

@@ -22,10 +22,9 @@ import {
 import {
   getAttempt,
   saveAnswer,
-  startAttempt,
   submitAttempt,
 } from "@/lib/api/endpoints";
-import type { GetAttemptResponse, StartAttemptResponse } from "@/lib/api/types";
+import type { GetAttemptResponse } from "@/lib/api/types";
 import { useAuth } from "@/hooks/useAuth";
 import { labelToApiKey } from "@/lib/choices";
 import { cn, formatTime } from "@/lib/utils";
@@ -40,10 +39,8 @@ function attemptStorageKey(slug: string) {
   return `attempt:${slug}`;
 }
 
-function getRemainingSeconds(
-  data: StartAttemptResponse | GetAttemptResponse
-): number {
-  if ("remaining_seconds" in data && typeof data.remaining_seconds === "number") {
+function getRemainingSeconds(data: GetAttemptResponse): number {
+  if (typeof data.remaining_seconds === "number") {
     return data.remaining_seconds;
   }
   return Math.max(
@@ -87,25 +84,31 @@ export function ExamTakingView({
         setLoading(true);
         setError(null);
 
-        let data: StartAttemptResponse | GetAttemptResponse;
-        const storedId =
+        const attemptFromQuery =
           initialAttemptId ??
           (typeof window !== "undefined"
-            ? sessionStorage.getItem(attemptStorageKey(resultSlug))
+            ? new URLSearchParams(window.location.search).get("attempt_id") ??
+              sessionStorage.getItem(attemptStorageKey(resultSlug))
             : null);
 
-        if (storedId) {
-          try {
-            const existing = await getAttempt(storedId);
-            data =
-              existing.status === "in_progress"
-                ? existing
-                : await startAttempt(examSetCode);
-          } catch {
-            data = await startAttempt(examSetCode);
+        if (!attemptFromQuery) {
+          if (!cancelled) {
+            setError("กรุณาเริ่มทำข้อสอบจากหน้ารายละเอียดชุดข้อสอบ");
+            setLoading(false);
+            window.setTimeout(() => {
+              router.replace(`/exams/${examSetCode}`);
+            }, 2500);
           }
-        } else {
-          data = await startAttempt(examSetCode);
+          return;
+        }
+
+        const data = await getAttempt(attemptFromQuery);
+        if (data.status !== "in_progress") {
+          if (!cancelled) {
+            setError("การสอบนี้สิ้นสุดแล้ว กรุณาเริ่มชุดข้อสอบใหม่");
+            setLoading(false);
+          }
+          return;
         }
 
         if (cancelled) return;
@@ -130,7 +133,7 @@ export function ExamTakingView({
     return () => {
       cancelled = true;
     };
-  }, [examSetCode, resultSlug, initialAttemptId]);
+  }, [examSetCode, resultSlug, initialAttemptId, router]);
 
   useEffect(() => {
     if (remainingSeconds <= 0) return;
@@ -248,8 +251,8 @@ export function ExamTakingView({
     return (
       <div className="mx-auto max-w-lg px-4 py-16 text-center">
         <p className="text-danger">{error ?? "ไม่พบข้อสอบ"}</p>
-        <Button className="mt-4" onClick={() => router.push("/exams")}>
-          กลับคลังข้อสอบ
+        <Button className="mt-4" onClick={() => router.push(`/exams/${examSetCode}`)}>
+          กลับไปรายละเอียดชุดข้อสอบ
         </Button>
       </div>
     );

@@ -1,3 +1,5 @@
+export type { ExamSet, ExamSetDifficulty, ExamSetAccessType, ExamSetMode } from "@/lib/exam/format";
+
 export interface ApiErrorBody {
   error: {
     code: string;
@@ -33,18 +35,32 @@ export interface ExamTrackItem {
   total_questions: number;
 }
 
+export interface ExamTrackRef {
+  code: string;
+  name: string;
+}
+
 export interface ExamSetItem {
-  id: string;
+  id?: string;
   code: string;
   title: string;
   description?: string;
+  cover_image_url?: string | null;
   duration_minutes: number;
   total_questions: number;
   passing_score: number;
-  difficulty: string;
-  access_type: string;
-  mode: string;
+  difficulty: "easy" | "medium" | "hard";
+  access_type: "free" | "premium";
+  price_amount: number;
+  sale_price_amount?: number | null;
+  currency: string;
+  mode: "practice" | "mock_exam";
+  is_official: boolean;
+  is_featured?: boolean;
+  exam_track?: ExamTrackRef;
+  /** @deprecated use exam_track */
   exam_track_code?: string;
+  /** @deprecated use exam_track */
   exam_track_name?: string;
 }
 
@@ -179,4 +195,144 @@ export interface ReviewResponse {
     title: string;
   };
   questions: ReviewQuestion[];
+}
+
+// My Results types
+
+export interface WeakSubject {
+  subject_code?: string;
+  subject_name: string;
+  average_score_percent: number;
+  recommendation?: string;
+}
+
+export interface MyResultsSummary {
+  total_attempts: number;
+  completed_exam_sets: number;
+  completed_exam_tracks: number;
+  average_score_percent: number;
+  best_score_percent: number;
+  latest_score_percent: number;
+  passed_attempts: number;
+  failed_attempts: number;
+  pass_rate_percent: number;
+  average_duration_seconds: number;
+  most_practiced_exam_track?: ExamTrackRef;
+  weak_subjects: WeakSubject[];
+}
+
+export interface ExamTrackResultSummary {
+  exam_track: ExamTrackItem & { cover_image_url?: string | null };
+  completed_exam_sets: number;
+  total_exam_sets: number;
+  total_attempts: number;
+  average_best_score_percent: number;
+  best_score_percent: number;
+  latest_score_percent: number;
+  passed_exam_sets: number;
+  failed_exam_sets: number;
+  average_duration_seconds: number;
+  last_attempt_at?: string | null;
+  weak_subjects: WeakSubject[];
+}
+
+export interface TrackSummaryStats {
+  completed_exam_sets: number;
+  total_exam_sets: number;
+  total_attempts: number;
+  average_best_score_percent: number;
+  best_score_percent: number;
+  latest_score_percent: number;
+  passed_exam_sets: number;
+  failed_exam_sets: number;
+  average_duration_seconds: number;
+  readiness_percent: number;
+}
+
+export interface ExamSetProgressItem {
+  exam_set: {
+    id?: string;
+    code: string;
+    title: string;
+    cover_image_url?: string | null;
+    total_questions?: number;
+    duration_minutes?: number;
+    passing_score?: number;
+  };
+  attempt_count: number;
+  latest_attempt_id?: string;
+  latest_score_percent: number;
+  best_attempt_id?: string;
+  best_score_percent: number;
+  first_score_percent: number;
+  improvement_percent: number;
+  passed: boolean;
+  last_attempt_at?: string | null;
+}
+
+export interface ExamTrackResultDetail {
+  exam_track: ExamTrackItem & {
+    cover_image_url?: string | null;
+    description?: string;
+  };
+  summary: TrackSummaryStats;
+  exam_sets: ExamSetProgressItem[];
+  weakness_analysis: WeakSubject[];
+}
+
+export interface AttemptHistoryItem {
+  attempt_id: string;
+  exam_track: ExamTrackRef;
+  exam_set: {
+    code: string;
+    title: string;
+    cover_image_url?: string | null;
+  };
+  attempt_no: number;
+  score: number;
+  total_score: number;
+  score_percent: number;
+  passed: boolean;
+  correct_count: number;
+  wrong_count: number;
+  unanswered_count: number;
+  duration_seconds: number;
+  status: string;
+  started_at: string;
+  submitted_at?: string | null;
+}
+
+export interface PaginatedAttempts {
+  items: AttemptHistoryItem[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+  };
+}
+
+export interface ExamSetResultDetail {
+  exam_set: {
+    code: string;
+    title: string;
+    cover_image_url?: string | null;
+    passing_score?: number;
+  };
+  summary: {
+    attempt_count: number;
+    first_score_percent: number;
+    latest_score_percent: number;
+    best_score_percent: number;
+    improvement_percent: number;
+    passed: boolean;
+    average_duration_seconds: number;
+  };
+  attempts: {
+    attempt_id: string;
+    attempt_no: number;
+    score_percent: number;
+    passed: boolean;
+    duration_seconds: number;
+    submitted_at?: string | null;
+  }[];
 }

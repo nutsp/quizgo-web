@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { AlertTriangle, BarChart3, BookOpen, Loader2 } from "lucide-react";
-import { ExamCard } from "@/components/ExamCard";
+import { ExamSetCard } from "@/components/exam/ExamSetCard";
+import { StartExamModal } from "@/components/exam/StartExamModal";
 import { MiniAnswerSheetPreview } from "@/components/MiniAnswerSheetPreview";
 import { ProgressCard } from "@/components/ProgressCard";
 import { SearchBar } from "@/components/SearchBar";
@@ -12,7 +13,8 @@ import { Button } from "@/components/ui/button";
 import { quickFilters } from "@/data/exams";
 import { useAuth } from "@/hooks/useAuth";
 import { getHome } from "@/lib/api/endpoints";
-import { mapExamSetToExam } from "@/lib/api/mappers";
+import { mapExamSetItemToExamSet } from "@/lib/api/mappers";
+import type { ExamSet } from "@/lib/exam/format";
 import type { HomeResponse } from "@/lib/api/types";
 
 export default function HomePage() {
@@ -20,6 +22,8 @@ export default function HomePage() {
   const [activeChip, setActiveChip] = useState<string | null>(null);
   const [home, setHome] = useState<HomeResponse | null>(null);
   const [loading, setLoading] = useState(true);
+  const [startExamSet, setStartExamSet] = useState<ExamSet | null>(null);
+  const [modalOpen, setModalOpen] = useState(false);
 
   useEffect(() => {
     if (authLoading) return;
@@ -44,13 +48,20 @@ export default function HomePage() {
     };
   }, [authLoading, isAuthenticated]);
 
-  const popularExams = home?.popular_exam_sets.map(mapExamSetToExam) ?? [];
+  const popularExamSets =
+    home?.popular_exam_sets.map(mapExamSetItemToExamSet) ?? [];
   const progress = home?.my_progress_summary;
   const continueExam = home?.continue_attempt;
+  const featuredSet = popularExamSets[0];
 
   const heroTitle = isAuthenticated && user
     ? `ยินดีต้อนรับ, ${user.display_name}`
     : "เริ่มฝึกสอบฟรีวันนี้";
+
+  const handleStart = (examSet: ExamSet) => {
+    setStartExamSet(examSet);
+    setModalOpen(true);
+  };
 
   return (
     <div className="mx-auto max-w-7xl space-y-10 px-4 py-8 lg:px-8 lg:py-12">
@@ -73,9 +84,15 @@ export default function HomePage() {
             ฝนคำตอบ จับเวลา ตรวจคะแนน และวิเคราะห์จุดอ่อน เพื่อเตรียมพร้อมก่อนสอบจริง
           </p>
           <div className="flex flex-wrap gap-3">
-            <Button asChild size="lg">
-              <Link href="/exams/demo/take">เริ่มทำข้อสอบฟรี</Link>
-            </Button>
+            {featuredSet ? (
+              <Button size="lg" onClick={() => handleStart(featuredSet)}>
+                เริ่มทำข้อสอบฟรี
+              </Button>
+            ) : (
+              <Button asChild size="lg">
+                <Link href="/exams/gpor-set-1">เริ่มทำข้อสอบฟรี</Link>
+              </Button>
+            )}
             <Button asChild variant="outline" size="lg">
               <Link href="/exams">ดูคลังข้อสอบ</Link>
             </Button>
@@ -104,7 +121,7 @@ export default function HomePage() {
             completed={continueExam.answered_count}
             total={continueExam.total_questions}
             remainingMinutes={Math.ceil(continueExam.remaining_seconds / 60)}
-            href={`/exams/${continueExam.exam_set_code}/take?attemptId=${continueExam.attempt_id}`}
+            href={`/exams/${continueExam.exam_set_code}/take?attempt_id=${continueExam.attempt_id}`}
           />
         </section>
       )}
@@ -146,13 +163,19 @@ export default function HomePage() {
             <Loader2 className="h-6 w-6 animate-spin" />
           </div>
         ) : (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {popularExams.map((exam) => (
-              <ExamCard key={exam.id} exam={exam} variant="compact" />
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {popularExamSets.map((examSet) => (
+              <ExamSetCard key={examSet.code} examSet={examSet} onStart={handleStart} />
             ))}
           </div>
         )}
       </section>
+
+      <StartExamModal
+        examSet={startExamSet}
+        open={modalOpen}
+        onOpenChange={setModalOpen}
+      />
     </div>
   );
 }
