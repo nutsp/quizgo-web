@@ -1,0 +1,74 @@
+import { apiDelete, apiGet, apiPost, apiPut } from "@/lib/api";
+import type {
+  GetAttemptResponse,
+  HomeResponse,
+  LoginResponse,
+  PaginatedExamSets,
+  ResultResponse,
+  ReviewResponse,
+  StartAttemptResponse,
+  SubmitResponse,
+} from "@/lib/api/types";
+import type { AuthUser } from "@/lib/types";
+
+export function login(email: string, password: string) {
+  return apiPost<LoginResponse>("/auth/login", { email, password });
+}
+
+export function register(displayName: string, email: string, password: string) {
+  return apiPost<LoginResponse>("/auth/register", {
+    display_name: displayName,
+    email,
+    password,
+  });
+}
+
+export function getMe() {
+  return apiGet<AuthUser>("/auth/me", true, true);
+}
+
+export function getHome(auth = true) {
+  return apiGet<HomeResponse>("/home", auth);
+}
+
+export function listExamSets(params?: Record<string, string>) {
+  const query = params ? `?${new URLSearchParams(params)}` : "";
+  return apiGet<PaginatedExamSets>(`/exam-sets${query}`);
+}
+
+export function startAttempt(examSetCode: string) {
+  return apiPost<StartAttemptResponse>(`/exam-sets/${examSetCode}/attempts`, undefined, true);
+}
+
+export function getAttempt(attemptId: string) {
+  return apiGet<GetAttemptResponse>(`/attempts/${attemptId}`, true);
+}
+
+export function saveAnswer(
+  attemptId: string,
+  questionNo: number,
+  selectedChoiceKey: string
+) {
+  return apiPut<{ answered_count: number; unanswered_count: number }>(
+    `/attempts/${attemptId}/answers/${questionNo}`,
+    { selected_choice_key: selectedChoiceKey }
+  );
+}
+
+export function clearAnswer(attemptId: string, questionNo: number) {
+  return apiDelete<{ answered_count: number; unanswered_count: number }>(
+    `/attempts/${attemptId}/answers/${questionNo}`
+  );
+}
+
+export function submitAttempt(attemptId: string) {
+  return apiPost<SubmitResponse>(`/attempts/${attemptId}/submit`, undefined, true);
+}
+
+export function getResult(attemptId: string) {
+  return apiGet<ResultResponse>(`/attempts/${attemptId}/result`, true);
+}
+
+export function getReview(attemptId: string) {
+  return apiGet<ReviewResponse>(`/attempts/${attemptId}/review`, true);
+}

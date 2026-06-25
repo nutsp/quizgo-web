@@ -29,7 +29,9 @@ export function ExamCard({
   variant = "default",
   showDetailButton = false,
 }: ExamCardProps) {
-  const examHref = exam.slug ? `/exams/${exam.slug}/take` : "/exams/demo/take";
+  const examHref = exam.slug
+    ? `/exams/${exam.slug}/take`
+    : "/exams/demo/take";
 
   return (
     <Card className="flex flex-col transition-shadow hover:shadow-soft">

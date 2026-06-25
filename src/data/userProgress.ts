@@ -1,6 +1,6 @@
 export const userProgress = {
   continueExam: {
-    title: "Mock Exam เสมียน ชุด A",
+    title: "ข้อสอบเสมือนจริง ชุด A",
     completed: 45,
     total: 100,
     remainingMinutes: 58,
@@ -30,5 +30,5 @@ export const initialExamState = {
       return [q, null];
     })
   ) as Record<number, "ก" | "ข" | "ค" | "ง" | null>,
-  markedQuestions: [8, 23, 56] as number[],
+  markedQuestions: [7, 19, 33] as number[],
 };

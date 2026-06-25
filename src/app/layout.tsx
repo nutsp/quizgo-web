@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { Noto_Sans_Thai } from "next/font/google";
-import { MobileBottomNav } from "@/components/MobileBottomNav";
-import { Navbar } from "@/components/Navbar";
+import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
+import { Navbar } from "@/components/layout/Navbar";
+import { AuthProvider } from "@/hooks/useAuth";
 import "./globals.css";
 
 const notoSansThai = Noto_Sans_Thai({
@@ -11,9 +12,9 @@ const notoSansThai = Noto_Sans_Thai({
 });
 
 export const metadata: Metadata = {
-  title: "สนามสอบราชการ | จำลองสอบเสมียนเหมือนสนามจริง",
+  title: "สนามสอบเสมือนจริง | จำลองสอบเสมือนจริงเหมือนสนามจริง",
   description:
-    "แพลตฟอร์มฝึกสอบเสมียนและข้าราชการ จำลองสนามสอบจริง จับเวลา ตรวจคะแนน และวิเคราะห์จุดอ่อน",
+    "แพลตฟอร์มจำลองสอบเสมือนจริง ฝนคำตอบ จับเวลา ตรวจคะแนน และวิเคราะห์ผลสอบ",
 };
 
 export default function RootLayout({
@@ -24,9 +25,11 @@ export default function RootLayout({
   return (
     <html lang="th">
       <body className={`${notoSansThai.variable} font-sans antialiased`}>
-        <Navbar />
-        <main className="min-h-screen pb-20 md:pb-0">{children}</main>
-        <MobileBottomNav />
+        <AuthProvider>
+          <Navbar />
+          <main className="min-h-screen pb-20 md:pb-0">{children}</main>
+          <MobileBottomNav />
+        </AuthProvider>
       </body>
     </html>
   );

@@ -1,5 +1,5 @@
 export type Difficulty = "ง่าย" | "กลาง" | "ยาก";
-export type ExamType = "เสมียน" | "ธุรการ" | "ภาค ก" | "อปท." | "ท้องถิ่น";
+export type ExamType = "เสมือนจริง" | "ธุรการ" | "ภาค ก" | "อปท." | "ท้องถิ่น";
 export type Subject =
   | "งานสารบรรณ"
   | "ภาษาไทย"
@@ -30,9 +30,9 @@ export interface Exam {
 export const exams: Exam[] = [
   {
     id: "1",
-    title: "Mock Exam เสมียน ชุด A",
-    description: "จำลองข้อสอบเสมียน 100 ข้อ พร้อมจับเวลาเหมือนสนามจริง",
-    category: "เสมียน",
+    title: "ข้อสอบเสมือนจริง ชุด A",
+    description: "จำลองข้อสอบเสมือนจริง 100 ข้อ พร้อมจับเวลาเหมือนสนามจริง",
+    category: "เสมือนจริง",
     subjects: ["งานสารบรรณ", "กฎหมายราชการ", "ภาษาไทย"],
     format: "Mock Exam",
     questionCount: 100,
@@ -46,9 +46,9 @@ export const exams: Exam[] = [
   },
   {
     id: "2",
-    title: "Mock Exam เสมียน ชุด B",
-    description: "ข้อสอบเสมียนชุด B เน้นงานสารบรรณและกฎหมายราชการ",
-    category: "เสมียน",
+    title: "ข้อสอบเสมือนจริง ชุด B",
+    description: "ข้อสอบเสมือนจริงชุด B เน้นงานสารบรรณและกฎหมายราชการ",
+    category: "เสมือนจริง",
     subjects: ["งานสารบรรณ", "กฎหมายราชการ", "คอมพิวเตอร์"],
     format: "Mock Exam",
     questionCount: 100,
@@ -93,7 +93,7 @@ export const exams: Exam[] = [
     id: "5",
     title: "กฎหมายราชการ ข้อสอบย้อนหลัง",
     description: "รวมข้อสอบกฎหมายราชการจากการสอบจริง 5 ปีล่าสุด",
-    category: "เสมียน",
+    category: "เสมือนจริง",
     subjects: ["กฎหมายราชการ"],
     format: "ข้อสอบย้อนหลัง",
     questionCount: 50,
@@ -108,7 +108,7 @@ export const exams: Exam[] = [
     id: "6",
     title: "งานสารบรรณ ฝึกเฉพาะหมวด",
     description: "ฝึกเฉพาะหมวดงานสารบรรณ 30 ข้อ พร้อมเฉลยละเอียด",
-    category: "เสมียน",
+    category: "เสมือนจริง",
     subjects: ["งานสารบรรณ"],
     format: "ฝึกเฉพาะหมวด",
     questionCount: 30,
@@ -154,7 +154,7 @@ export const exams: Exam[] = [
 export const popularExams = exams.slice(0, 4);
 
 export const filterOptions = {
-  examTypes: ["เสมียน", "ธุรการ", "ภาค ก", "อปท.", "ท้องถิ่น"] as ExamType[],
+  examTypes: ["เสมือนจริง", "ธุรการ", "ภาค ก", "อปท.", "ท้องถิ่น"] as ExamType[],
   subjects: [
     "งานสารบรรณ",
     "ภาษาไทย",
@@ -178,7 +178,7 @@ export const sortOptions = [
 ];
 
 export const quickFilters = [
-  "เสมียน",
+  "เสมือนจริง",
   "ธุรการ",
   "งานสารบรรณ",
   "กฎหมายราชการ",

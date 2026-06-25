@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { ChevronLeft, ChevronRight, SlidersHorizontal, X } from "lucide-react";
+import { useEffect, useState } from "react";
+import { ChevronLeft, ChevronRight, Loader2, SlidersHorizontal, X } from "lucide-react";
 import { ExamCard } from "@/components/ExamCard";
 import { FilterSidebar } from "@/components/FilterSidebar";
 import { SearchBar } from "@/components/SearchBar";
@@ -13,17 +13,48 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { exams, sortOptions } from "@/data/exams";
+import type { Exam } from "@/data/exams";
+import { sortOptions } from "@/data/exams";
+import { listExamSets } from "@/lib/api/endpoints";
+import { mapExamSetToExam } from "@/lib/api/mappers";
 
 export default function ExamLibraryPage() {
   const [showFilters, setShowFilters] = useState(false);
   const [sort, setSort] = useState("recommended");
   const [currentPage, setCurrentPage] = useState(1);
-  const totalPages = 3;
+  const [exams, setExams] = useState<Exam[]>([]);
+  const [totalPages, setTotalPages] = useState(1);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function load() {
+      setLoading(true);
+      try {
+        const data = await listExamSets({
+          page: String(currentPage),
+          limit: "8",
+        });
+        if (!cancelled) {
+          setExams(data.items.map(mapExamSetToExam));
+          setTotalPages(Math.max(1, data.total_pages));
+        }
+      } catch {
+        if (!cancelled) setExams([]);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, [currentPage]);
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 lg:px-8">
-      {/* Header */}
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-foreground md:text-3xl">คลังข้อสอบ</h1>
         <p className="mt-2 text-muted">
@@ -31,7 +62,6 @@ export default function ExamLibraryPage() {
         </p>
       </div>
 
-      {/* Search and Sort */}
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <SearchBar placeholder="ค้นหาชุดข้อสอบ" className="flex-1" />
         <div className="flex items-center gap-3">
@@ -59,7 +89,6 @@ export default function ExamLibraryPage() {
       </div>
 
       <div className="flex gap-8">
-        {/* Desktop Filter Sidebar */}
         <div className="hidden w-64 shrink-0 lg:block">
           <div className="sticky top-24 rounded-2xl border border-border bg-surface p-5 shadow-card">
             <h2 className="mb-4 text-sm font-bold text-foreground">ตัวกรอง</h2>
@@ -67,18 +96,21 @@ export default function ExamLibraryPage() {
           </div>
         </div>
 
-        {/* Exam Grid */}
         <div className="flex-1">
-          <p className="mb-4 text-sm text-muted">
-            แสดง {exams.length} ชุดข้อสอบ
-          </p>
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-2">
-            {exams.map((exam) => (
-              <ExamCard key={exam.id} exam={exam} showDetailButton />
-            ))}
-          </div>
+          <p className="mb-4 text-sm text-muted">แสดง {exams.length} ชุดข้อสอบ</p>
 
-          {/* Pagination */}
+          {loading ? (
+            <div className="flex justify-center py-16 text-muted">
+              <Loader2 className="h-8 w-8 animate-spin" />
+            </div>
+          ) : (
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-2">
+              {exams.map((exam) => (
+                <ExamCard key={exam.id} exam={exam} showDetailButton />
+              ))}
+            </div>
+          )}
+
           <div className="mt-8 flex items-center justify-center gap-2">
             <Button
               variant="outline"
@@ -110,7 +142,6 @@ export default function ExamLibraryPage() {
         </div>
       </div>
 
-      {/* Mobile Filter Drawer */}
       {showFilters && (
         <div className="fixed inset-0 z-50 lg:hidden">
           <div

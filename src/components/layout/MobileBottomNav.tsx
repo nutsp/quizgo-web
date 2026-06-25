@@ -3,9 +3,17 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { BookOpen, ClipboardList, Home, Target, User } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
 
-const tabs = [
+const guestTabs = [
+  { href: "/", label: "หน้าแรก", icon: Home },
+  { href: "/exams", label: "ข้อสอบ", icon: BookOpen },
+  { href: "#", label: "แผนฝึก", icon: Target },
+  { href: "/login", label: "เข้าสู่ระบบ", icon: User },
+];
+
+const authTabs = [
   { href: "/", label: "หน้าแรก", icon: Home },
   { href: "/exams", label: "ข้อสอบ", icon: BookOpen },
   { href: "#", label: "แผนฝึก", icon: Target },
@@ -15,9 +23,14 @@ const tabs = [
 
 export function MobileBottomNav() {
   const pathname = usePathname();
-  const isExamTaking = pathname.includes("/take");
+  const { isAuthenticated } = useAuth();
 
-  if (isExamTaking) return null;
+  const isExamTaking = pathname.includes("/take");
+  const isAuthPage = pathname === "/login" || pathname === "/register";
+
+  if (isExamTaking || isAuthPage) return null;
+
+  const tabs = isAuthenticated ? authTabs : guestTabs;
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-border bg-surface/95 backdrop-blur-md md:hidden">

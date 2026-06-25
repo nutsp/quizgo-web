@@ -1,13 +1,30 @@
 import { CheckCircle2, Clock, XCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { resultSummary } from "@/data/resultSummary";
 import { cn } from "@/lib/utils";
 
-export function ResultSummaryCard() {
-  const { score, total, passed, correct, wrong, unanswered, timeUsed, passingScore } =
-    resultSummary;
-  const percentage = Math.round((score / total) * 100);
+interface ResultSummaryCardProps {
+  score: number;
+  total: number;
+  passed: boolean;
+  correct: number;
+  wrong: number;
+  unanswered: number;
+  timeUsed: string;
+  passingScore: number;
+}
+
+export function ResultSummaryCard({
+  score,
+  total,
+  passed,
+  correct,
+  wrong,
+  unanswered,
+  timeUsed,
+  passingScore,
+}: ResultSummaryCardProps) {
+  const percentage = total > 0 ? Math.round((score / total) * 100) : 0;
 
   return (
     <Card className="overflow-hidden border-0 bg-gradient-to-br from-primary to-primary-dark text-white shadow-soft">
