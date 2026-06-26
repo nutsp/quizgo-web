@@ -4,8 +4,9 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { Loader2, Pencil, Trash2 } from "lucide-react";
 import { AdminConfirmDialog } from "@/components/admin/AdminConfirmDialog";
-import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import { AdminPageContainer } from "@/components/admin/AdminPageContainer";
 import { AdminStatusBadge } from "@/components/admin/AdminStatusBadge";
+import { AdminTableContainer } from "@/components/admin/AdminTableContainer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -73,7 +74,20 @@ export default function QuestionsListPage() {
 
   return (
     <div>
-      <AdminPageHeader title="คลังคำถาม" description="จัดการโจทย์ ตัวเลือก เฉลย และคำอธิบาย" action={{ label: "เพิ่มคำถาม", href: "/admin/questions/new" }} />
+      <AdminPageContainer
+        title="คลังคำถาม"
+        description="จัดการโจทย์ ตัวเลือก เฉลย และคำอธิบาย"
+        actions={
+          <>
+            <Button asChild variant="outline">
+              <Link href="/admin/questions/import">นำเข้าคำถาม</Link>
+            </Button>
+            <Button asChild>
+              <Link href="/admin/questions/new">เพิ่มคำถาม</Link>
+            </Button>
+          </>
+        }
+      />
       <div className="mb-4 flex flex-wrap gap-3">
         <Input placeholder="ค้นหา..." value={search} onChange={(e) => setSearch(e.target.value)} className="max-w-xs" />
         <Select value={subjectFilter || "all"} onValueChange={(v) => setSubjectFilter(v === "all" ? "" : v)}>
@@ -98,27 +112,27 @@ export default function QuestionsListPage() {
       ) : items.length === 0 ? (
         <p className="text-muted">ไม่พบข้อมูล</p>
       ) : (
-        <div className="overflow-x-auto rounded-xl border border-border bg-surface">
+        <AdminTableContainer>
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-border bg-background text-left text-muted">
-                <th className="p-3">คำถาม</th>
-                <th className="p-3">หมวดวิชา</th>
-                <th className="p-3">ระดับ</th>
-                <th className="p-3">เฉลย</th>
-                <th className="p-3">สถานะ</th>
-                <th className="p-3">จัดการ</th>
+              <tr className="border-b border-slate-200 bg-slate-50 text-left text-slate-500">
+                <th className="px-5 py-3.5 font-medium">คำถาม</th>
+                <th className="px-5 py-3.5 font-medium">หมวดวิชา</th>
+                <th className="px-5 py-3.5 font-medium">ระดับ</th>
+                <th className="px-5 py-3.5 font-medium">เฉลย</th>
+                <th className="px-5 py-3.5 font-medium">สถานะ</th>
+                <th className="px-5 py-3.5 font-medium">จัดการ</th>
               </tr>
             </thead>
             <tbody>
               {items.map((q) => (
-                <tr key={q.id} className="border-b border-border last:border-0">
-                  <td className="max-w-xs p-3">{q.question_preview ?? q.question_text.slice(0, 80)}</td>
-                  <td className="p-3">{q.subject_name}</td>
-                  <td className="p-3"><AdminStatusBadge status={q.difficulty} /></td>
-                  <td className="p-3">{q.correct_answer}</td>
-                  <td className="p-3"><AdminStatusBadge status={q.status} /></td>
-                  <td className="p-3">
+                <tr key={q.id} className="border-b border-slate-100 last:border-0">
+                  <td className="max-w-xs px-5 py-4">{q.question_preview ?? q.question_text.slice(0, 80)}</td>
+                  <td className="px-5 py-4">{q.subject_name}</td>
+                  <td className="px-5 py-4"><AdminStatusBadge status={q.difficulty} /></td>
+                  <td className="px-5 py-4">{q.correct_answer}</td>
+                  <td className="px-5 py-4"><AdminStatusBadge status={q.status} /></td>
+                  <td className="px-5 py-4">
                     <div className="flex gap-1">
                       <Button asChild variant="ghost" size="icon"><Link href={`/admin/questions/${q.id}/edit`}><Pencil className="h-4 w-4" /></Link></Button>
                       <Button variant="ghost" size="icon" onClick={() => setDeleteId(q.id)}><Trash2 className="h-4 w-4 text-danger" /></Button>
@@ -128,7 +142,7 @@ export default function QuestionsListPage() {
               ))}
             </tbody>
           </table>
-        </div>
+        </AdminTableContainer>
       )}
       <AdminConfirmDialog open={!!deleteId} title="ลบคำถาม" description="หากถูกใช้ในการสอบแล้ว ระบบจะเก็บถาวรแทน" confirmLabel="ลบ" loading={deleting} onConfirm={handleDelete} onCancel={() => setDeleteId(null)} />
     </div>

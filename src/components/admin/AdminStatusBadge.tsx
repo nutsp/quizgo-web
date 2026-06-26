@@ -8,7 +8,7 @@ type AdminStatusBadgeProps = {
 
 const statusLabels: Record<string, string> = {
   draft: "ฉบับร่าง",
-  published: "เผยแพร่",
+  published: "เผยแพร่แล้ว",
   archived: "เก็บถาวร",
   easy: "ง่าย",
   medium: "ปานกลาง",
@@ -36,9 +36,9 @@ export function AdminStatusBadge({ active, status, className }: AdminStatusBadge
 
   const label = status ? statusLabels[status] ?? status : "-";
   const colorMap: Record<string, string> = {
-    draft: "bg-warning/10 text-warning",
+    draft: "bg-amber-100 text-amber-800",
     published: "bg-success/10 text-success",
-    archived: "bg-muted/10 text-muted",
+    archived: "bg-slate-100 text-slate-600",
     premium: "bg-accent/10 text-accent",
   };
 

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
+import { ExamSetReadinessPanel } from "@/components/admin/exam-sets/ExamSetReadinessPanel";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { ExamSetForm } from "@/components/admin/forms/ExamSetForm";
 import { useToast } from "@/hooks/useToast";
@@ -40,38 +41,43 @@ export default function EditExamSetPage({ params }: { params: { id: string } }) 
   return (
     <div>
       <AdminPageHeader title={`แก้ไข: ${set.title}`} />
-      <ExamSetForm
-        tracks={tracks}
-        defaultValues={{
-          exam_track_id: set.exam_track_id,
-          title: set.title,
-          code: set.code,
-          description: set.description ?? "",
-          cover_image_url: set.cover_image_url ?? "",
-          duration_minutes: set.duration_minutes,
-          total_questions: set.total_questions,
-          passing_score: set.passing_score,
-          difficulty: set.difficulty as "easy" | "medium" | "hard",
-          access_type: set.access_type as "free" | "premium",
-          price_amount: set.price_amount,
-          sale_price_amount: set.sale_price_amount ?? undefined,
-          currency: set.currency,
-          mode: set.mode as "practice" | "mock_exam",
-          is_official: set.is_official,
-          is_featured: set.is_featured,
-          is_active: set.is_active,
-        }}
-        onSubmit={async (data) => {
-          try {
-            await adminExamSetsApi.update(params.id, data);
-            showToast("บันทึกสำเร็จ");
-            router.push("/admin/exam-sets");
-          } catch (e) {
-            showToast(toUserFriendlyError(e), "error");
-            throw e;
-          }
-        }}
-      />
+      <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
+        <ExamSetForm
+          tracks={tracks}
+          defaultValues={{
+            exam_track_id: set.exam_track_id,
+            title: set.title,
+            code: set.code,
+            description: set.description ?? "",
+            cover_image_url: set.cover_image_url ?? "",
+            duration_minutes: set.duration_minutes,
+            total_questions: set.total_questions,
+            passing_score: set.passing_score,
+            difficulty: set.difficulty as "easy" | "medium" | "hard",
+            access_type: set.access_type as "free" | "premium",
+            price_amount: set.price_amount,
+            sale_price_amount: set.sale_price_amount ?? undefined,
+            currency: set.currency,
+            mode: set.mode as "practice" | "mock_exam",
+            is_official: set.is_official,
+            is_featured: set.is_featured,
+            is_active: set.is_active,
+          }}
+          onSubmit={async (data) => {
+            try {
+              await adminExamSetsApi.update(params.id, data);
+              showToast("บันทึกสำเร็จ");
+              router.push("/admin/exam-sets");
+            } catch (e) {
+              showToast(toUserFriendlyError(e), "error");
+              throw e;
+            }
+          }}
+        />
+        <div id="readiness">
+          <ExamSetReadinessPanel examSetId={params.id} status={set.status} />
+        </div>
+      </div>
     </div>
   );
 }

@@ -124,8 +124,75 @@ export function apiPut<T>(path: string, body?: unknown, auth = true) {
   });
 }
 
-export function apiDelete<T>(path: string, auth = true) {
-  return request<T>(path, { method: "DELETE", auth });
+export function apiDelete<T>(path: string, auth = true, body?: unknown) {
+  return request<T>(path, {
+    method: "DELETE",
+    auth,
+    body: body !== undefined ? JSON.stringify(body) : undefined,
+  });
+}
+
+export async function apiPostFormData<T>(path: string, formData: FormData, auth = true): Promise<T> {
+  const token = auth ? getStoredToken() : null;
+  const reqHeaders: HeadersInit = {};
+  if (auth && token) {
+    (reqHeaders as Record<string, string>).Authorization = `Bearer ${token}`;
+  }
+
+  let res: Response;
+  try {
+    res = await fetch(`${getBaseUrl()}${path}`, {
+      method: "POST",
+      headers: reqHeaders,
+      body: formData,
+    });
+  } catch {
+    throw new ApiError("NETWORK_ERROR", "ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้", 0);
+  }
+
+  const json = await res.json().catch(() => null);
+
+  if (!res.ok) {
+    const err = json as ApiErrorBody | null;
+    const apiError = new ApiError(
+      err?.error?.code ?? "UNKNOWN",
+      err?.error?.message ?? "เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง",
+      res.status
+    );
+    if (res.status === 401 && auth) {
+      redirectToLogin();
+    }
+    throw apiError;
+  }
+
+  return parseSuccessBody<T>(json);
+}
+
+export async function apiDownloadBlob(path: string, auth = true): Promise<Blob> {
+  const token = auth ? getStoredToken() : null;
+  const reqHeaders: HeadersInit = {};
+  if (auth && token) {
+    (reqHeaders as Record<string, string>).Authorization = `Bearer ${token}`;
+  }
+
+  let res: Response;
+  try {
+    res = await fetch(`${getBaseUrl()}${path}`, { method: "GET", headers: reqHeaders });
+  } catch {
+    throw new ApiError("NETWORK_ERROR", "ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้", 0);
+  }
+
+  if (!res.ok) {
+    const json = await res.json().catch(() => null);
+    const err = json as ApiErrorBody | null;
+    throw new ApiError(
+      err?.error?.code ?? "UNKNOWN",
+      err?.error?.message ?? "เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง",
+      res.status
+    );
+  }
+
+  return res.blob();
 }
 
 /** @deprecated Use apiGet/apiPost from this module directly */

@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import {
   Dialog,
   DialogContent,
@@ -13,7 +14,7 @@ import { Button } from "@/components/ui/button";
 type AdminConfirmDialogProps = {
   open: boolean;
   title: string;
-  description: string;
+  description: ReactNode;
   confirmLabel?: string;
   loading?: boolean;
   onConfirm: () => void;
@@ -34,7 +35,9 @@ export function AdminConfirmDialog({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
-          <DialogDescription>{description}</DialogDescription>
+          <DialogDescription asChild>
+            <div>{description}</div>
+          </DialogDescription>
         </DialogHeader>
         <DialogFooter className="gap-2 sm:gap-0">
           <Button variant="outline" onClick={onCancel} disabled={loading}>

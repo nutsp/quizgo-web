@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Loader2, Pencil, Trash2 } from "lucide-react";
 import { AdminConfirmDialog } from "@/components/admin/AdminConfirmDialog";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import { AdminTableContainer } from "@/components/admin/AdminTableContainer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/useToast";
@@ -62,27 +63,27 @@ export default function SubjectsListPage() {
       ) : items.length === 0 ? (
         <p className="text-muted">ไม่พบข้อมูล</p>
       ) : (
-        <div className="overflow-x-auto rounded-xl border border-border bg-surface">
+        <AdminTableContainer>
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-border bg-background text-left text-muted">
-                <th className="p-3">ชื่อ</th>
-                <th className="p-3">รหัส</th>
-                <th className="p-3">คำอธิบาย</th>
-                <th className="p-3">จำนวนคำถาม</th>
-                <th className="p-3">อัปเดต</th>
-                <th className="p-3">จัดการ</th>
+              <tr className="border-b border-slate-200 bg-slate-50 text-left text-slate-500">
+                <th className="px-5 py-3.5 font-medium">ชื่อ</th>
+                <th className="px-5 py-3.5 font-medium">รหัส</th>
+                <th className="px-5 py-3.5 font-medium">คำอธิบาย</th>
+                <th className="px-5 py-3.5 font-medium">จำนวนคำถาม</th>
+                <th className="px-5 py-3.5 font-medium">อัปเดต</th>
+                <th className="px-5 py-3.5 font-medium">จัดการ</th>
               </tr>
             </thead>
             <tbody>
               {items.map((s) => (
-                <tr key={s.id} className="border-b border-border last:border-0">
-                  <td className="p-3 font-medium">{s.name}</td>
-                  <td className="p-3 text-muted">{s.code}</td>
-                  <td className="p-3 text-muted">{s.description || "-"}</td>
-                  <td className="p-3">{s.question_count}</td>
-                  <td className="p-3 text-muted">{new Date(s.updated_at).toLocaleDateString("th-TH")}</td>
-                  <td className="p-3">
+                <tr key={s.id} className="border-b border-slate-100 last:border-0">
+                  <td className="px-5 py-4 font-medium">{s.name}</td>
+                  <td className="px-5 py-4 text-slate-500">{s.code}</td>
+                  <td className="px-5 py-4 text-slate-500">{s.description || "-"}</td>
+                  <td className="px-5 py-4">{s.question_count}</td>
+                  <td className="px-5 py-4 text-slate-500">{new Date(s.updated_at).toLocaleDateString("th-TH")}</td>
+                  <td className="px-5 py-4">
                     <div className="flex gap-1">
                       <Button asChild variant="ghost" size="icon"><Link href={`/admin/subjects/${s.id}/edit`}><Pencil className="h-4 w-4" /></Link></Button>
                       <Button variant="ghost" size="icon" onClick={() => setDeleteId(s.id)}><Trash2 className="h-4 w-4 text-danger" /></Button>
@@ -92,7 +93,7 @@ export default function SubjectsListPage() {
               ))}
             </tbody>
           </table>
-        </div>
+        </AdminTableContainer>
       )}
       <AdminConfirmDialog open={!!deleteId} title="ลบหมวดวิชา" description="ไม่สามารถลบหมวดวิชาที่มีคำถามอยู่" confirmLabel="ลบ" loading={deleting} onConfirm={handleDelete} onCancel={() => setDeleteId(null)} />
     </div>

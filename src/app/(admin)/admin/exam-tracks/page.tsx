@@ -6,6 +6,7 @@ import { Loader2, Pencil, Trash2 } from "lucide-react";
 import { AdminConfirmDialog } from "@/components/admin/AdminConfirmDialog";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { AdminStatusBadge } from "@/components/admin/AdminStatusBadge";
+import { AdminTableContainer } from "@/components/admin/AdminTableContainer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/useToast";
@@ -76,24 +77,24 @@ export default function ExamTracksListPage() {
       ) : items.length === 0 ? (
         <p className="text-muted">ไม่พบข้อมูล</p>
       ) : (
-        <div className="overflow-x-auto rounded-xl border border-border bg-surface">
+        <AdminTableContainer>
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-border bg-background text-left text-muted">
-                <th className="p-3">ปก</th>
-                <th className="p-3">ชื่อ</th>
-                <th className="p-3">รหัส</th>
-                <th className="p-3">ชุดข้อสอบ</th>
-                <th className="p-3">คำถาม</th>
-                <th className="p-3">สถานะ</th>
-                <th className="p-3">อัปเดต</th>
-                <th className="p-3">จัดการ</th>
+              <tr className="border-b border-slate-200 bg-slate-50 text-left text-slate-500">
+                <th className="px-5 py-3.5 font-medium">ปก</th>
+                <th className="px-5 py-3.5 font-medium">ชื่อ</th>
+                <th className="px-5 py-3.5 font-medium">รหัส</th>
+                <th className="px-5 py-3.5 font-medium">ชุดข้อสอบ</th>
+                <th className="px-5 py-3.5 font-medium">คำถาม</th>
+                <th className="px-5 py-3.5 font-medium">สถานะ</th>
+                <th className="px-5 py-3.5 font-medium">อัปเดต</th>
+                <th className="px-5 py-3.5 font-medium">จัดการ</th>
               </tr>
             </thead>
             <tbody>
               {items.map((t) => (
-                <tr key={t.id} className="border-b border-border last:border-0">
-                  <td className="p-3">
+                <tr key={t.id} className="border-b border-slate-100 last:border-0">
+                  <td className="px-5 py-4">
                     {t.cover_image_url ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img src={t.cover_image_url} alt="" className="h-10 w-10 rounded object-cover" />
@@ -103,13 +104,13 @@ export default function ExamTracksListPage() {
                       </div>
                     )}
                   </td>
-                  <td className="p-3 font-medium">{t.name}</td>
-                  <td className="p-3 text-muted">{t.code}</td>
-                  <td className="p-3">{t.total_exam_sets}</td>
-                  <td className="p-3">{t.total_questions}</td>
-                  <td className="p-3"><AdminStatusBadge active={t.is_active} /></td>
-                  <td className="p-3 text-muted">{new Date(t.updated_at).toLocaleDateString("th-TH")}</td>
-                  <td className="p-3">
+                  <td className="px-5 py-4 font-medium">{t.name}</td>
+                  <td className="px-5 py-4 text-slate-500">{t.code}</td>
+                  <td className="px-5 py-4">{t.total_exam_sets}</td>
+                  <td className="px-5 py-4">{t.total_questions}</td>
+                  <td className="px-5 py-4"><AdminStatusBadge active={t.is_active} /></td>
+                  <td className="px-5 py-4 text-slate-500">{new Date(t.updated_at).toLocaleDateString("th-TH")}</td>
+                  <td className="px-5 py-4">
                     <div className="flex gap-1">
                       <Button asChild variant="ghost" size="icon"><Link href={`/admin/exam-tracks/${t.id}/edit`}><Pencil className="h-4 w-4" /></Link></Button>
                       <Button variant="ghost" size="icon" onClick={() => setDeleteId(t.id)}><Trash2 className="h-4 w-4 text-danger" /></Button>
@@ -119,7 +120,7 @@ export default function ExamTracksListPage() {
               ))}
             </tbody>
           </table>
-        </div>
+        </AdminTableContainer>
       )}
       <AdminConfirmDialog
         open={!!deleteId}

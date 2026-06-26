@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { AdminGuard } from "@/components/admin/AdminGuard";
-import { AdminDesktopTopbar, AdminTopbar } from "@/components/admin/AdminTopbar";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
+import { AdminTopbar } from "@/components/admin/AdminTopbar";
 import { ToastProvider } from "@/hooks/useToast";
 
 export function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -12,10 +12,8 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
   return (
     <AdminGuard>
       <ToastProvider>
-        <div className="flex min-h-screen bg-background">
-          <div className="hidden w-64 shrink-0 lg:block">
-            <AdminSidebar className="fixed left-0 top-0 h-screen w-64" />
-          </div>
+        <div className="min-h-screen bg-slate-50">
+          <AdminSidebar />
 
           {drawerOpen && (
             <div className="fixed inset-0 z-50 lg:hidden">
@@ -26,16 +24,17 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
                 onClick={() => setDrawerOpen(false)}
               />
               <AdminSidebar
-                className="absolute left-0 top-0 h-full w-64 shadow-xl"
+                className="absolute left-0 top-0 flex h-full w-72 shadow-xl"
                 onNavigate={() => setDrawerOpen(false)}
               />
             </div>
           )}
 
-          <div className="flex min-h-screen flex-1 flex-col lg:ml-64">
+          <div className="min-h-screen lg:pl-72">
             <AdminTopbar onMenuClick={() => setDrawerOpen(true)} />
-            <AdminDesktopTopbar />
-            <main className="flex-1 p-4 md:p-6 lg:p-8">{children}</main>
+            <main className="px-4 py-6 sm:px-6 lg:px-8">
+              <div className="mx-auto w-full max-w-7xl">{children}</div>
+            </main>
           </div>
         </div>
       </ToastProvider>

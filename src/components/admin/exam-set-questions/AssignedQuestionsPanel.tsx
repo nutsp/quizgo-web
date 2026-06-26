@@ -1,27 +1,54 @@
 "use client";
 
-import { ArrowDown, ArrowUp, Trash2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import type { AdminExamSetQuestion } from "@/lib/api/admin/endpoints";
+import type { AssignedExamQuestion } from "@/lib/api/admin/exam-set-questions";
+import { AssignedQuestionRow } from "./AssignedQuestionRow";
 
 type AssignedQuestionsPanelProps = {
-  items: AdminExamSetQuestion[];
-  onRemove: (questionId: string) => void;
+  items: AssignedExamQuestion[];
+  disabled: boolean;
+  dirty: boolean;
+  saving: boolean;
   onMoveUp: (questionId: string) => void;
   onMoveDown: (questionId: string) => void;
+  onRemove: (questionId: string) => void;
+  onSaveOrder: () => void;
 };
 
 export function AssignedQuestionsPanel({
   items,
-  onRemove,
+  disabled,
+  dirty,
+  saving,
   onMoveUp,
   onMoveDown,
+  onRemove,
+  onSaveOrder,
 }: AssignedQuestionsPanelProps) {
   return (
-    <section className="rounded-xl border border-border bg-surface p-4">
-      <h2 className="mb-4 font-semibold">คำถามในชุดนี้ ({items.length})</h2>
+    <section className="flex h-full flex-col rounded-xl border border-border bg-surface p-4">
+      <div className="mb-4 flex items-center justify-between gap-2">
+        <h2 className="font-semibold">คำถามในชุดข้อสอบ ({items.length})</h2>
+        {dirty && (
+          <Button size="sm" disabled={disabled || saving} onClick={onSaveOrder}>
+            {saving ? (
+              <>
+                <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                กำลังบันทึก...
+              </>
+            ) : (
+              "บันทึกลำดับ"
+            )}
+          </Button>
+        )}
+      </div>
+
       {items.length === 0 ? (
-        <p className="text-sm text-muted">ยังไม่มีคำถามในชุดนี้</p>
+        <div className="flex flex-1 flex-col items-center justify-center py-12 text-center text-sm text-muted">
+          <p>ยังไม่มีคำถามในชุดข้อสอบนี้</p>
+          <p className="mt-1">เลือกคำถามจากคลังด้านซ้ายเพื่อเพิ่มเข้าชุดข้อสอบ</p>
+        </div>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
@@ -30,31 +57,23 @@ export function AssignedQuestionsPanel({
                 <th className="p-2">ข้อ</th>
                 <th className="p-2">คำถาม</th>
                 <th className="p-2">หมวด</th>
+                <th className="p-2">ความยาก</th>
                 <th className="p-2">คะแนน</th>
                 <th className="p-2">จัดการ</th>
               </tr>
             </thead>
             <tbody>
               {items.map((item, index) => (
-                <tr key={item.question_id} className="border-b border-border last:border-0">
-                  <td className="p-2 font-medium">{item.question_no}</td>
-                  <td className="max-w-xs p-2">{item.question_preview}</td>
-                  <td className="p-2 text-muted">{item.subject_name}</td>
-                  <td className="p-2">{item.score}</td>
-                  <td className="p-2">
-                    <div className="flex gap-1">
-                      <Button variant="ghost" size="icon" disabled={index === 0} onClick={() => onMoveUp(item.question_id)}>
-                        <ArrowUp className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="icon" disabled={index === items.length - 1} onClick={() => onMoveDown(item.question_id)}>
-                        <ArrowDown className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="icon" onClick={() => onRemove(item.question_id)}>
-                        <Trash2 className="h-4 w-4 text-danger" />
-                      </Button>
-                    </div>
-                  </td>
-                </tr>
+                <AssignedQuestionRow
+                  key={item.question_id}
+                  item={item}
+                  index={index}
+                  total={items.length}
+                  disabled={disabled}
+                  onMoveUp={() => onMoveUp(item.question_id)}
+                  onMoveDown={() => onMoveDown(item.question_id)}
+                  onRemove={() => onRemove(item.question_id)}
+                />
               ))}
             </tbody>
           </table>

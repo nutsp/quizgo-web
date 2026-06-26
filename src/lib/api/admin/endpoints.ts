@@ -1,4 +1,4 @@
-import { apiDelete, apiGet, apiPost, apiPut } from "@/lib/api";
+import { apiDelete, apiDownloadBlob, apiGet, apiPost, apiPostFormData, apiPut } from "@/lib/api";
 
 // --- Dashboard ---
 
@@ -85,6 +85,57 @@ export const adminExamTracksApi = {
 
 // --- Exam Sets ---
 
+export type ExamSetStatus = "draft" | "published" | "archived";
+
+export type ReadinessCheck = {
+  key: string;
+  label: string;
+  passed: boolean;
+  severity?: "error" | "warning";
+  message: string;
+};
+
+export type ExamSetReadiness = {
+  exam_set_id: string;
+  ready: boolean;
+  status: ExamSetStatus;
+  checks: ReadinessCheck[];
+  summary: {
+    total_questions: number;
+    published_questions: number;
+    draft_questions: number;
+    invalid_questions: number;
+  };
+};
+
+export type ExamSetPreviewChoice = {
+  choice_key: string;
+  choice_label: string;
+  choice_text: string;
+};
+
+export type ExamSetPreviewQuestion = {
+  question_no: number;
+  question_text: string;
+  subject_name?: string;
+  difficulty?: string;
+  choices: ExamSetPreviewChoice[];
+};
+
+export type ExamSetPreview = {
+  exam_set: AdminExamSet & { status: ExamSetStatus };
+  readiness: ExamSetReadiness;
+  sample_questions: ExamSetPreviewQuestion[];
+};
+
+export type PublishStatusResponse = {
+  id: string;
+  code?: string;
+  title?: string;
+  status: ExamSetStatus;
+  is_active?: boolean;
+};
+
 export type AdminExamSet = {
   id: string;
   exam_track_id: string;
@@ -104,6 +155,7 @@ export type AdminExamSet = {
   is_official: boolean;
   is_featured: boolean;
   is_active: boolean;
+  status?: ExamSetStatus;
   exam_track?: { code: string; name: string };
   created_at: string;
   updated_at: string;
@@ -148,6 +200,16 @@ export const adminExamSetsApi = {
     apiPut<AdminExamSet>(`/admin/exam-sets/${id}`, input, true),
   delete: (id: string) =>
     apiDelete<{ deactivated: boolean }>(`/admin/exam-sets/${id}`, true),
+  getReadiness: (id: string) =>
+    apiGet<ExamSetReadiness>(`/admin/exam-sets/${id}/readiness`, true),
+  getPreview: (id: string) =>
+    apiGet<ExamSetPreview>(`/admin/exam-sets/${id}/preview`, true),
+  publish: (id: string) =>
+    apiPost<PublishStatusResponse>(`/admin/exam-sets/${id}/publish`, {}, true),
+  unpublish: (id: string) =>
+    apiPost<PublishStatusResponse>(`/admin/exam-sets/${id}/unpublish`, {}, true),
+  archive: (id: string) =>
+    apiPost<PublishStatusResponse>(`/admin/exam-sets/${id}/archive`, {}, true),
 };
 
 // --- Subjects ---
@@ -244,6 +306,17 @@ export const adminQuestionsApi = {
 
 // --- Exam Set Questions ---
 
+export {
+  adminExamSetQuestionsApi,
+  type AdminQuestionListItem,
+  type AssignedExamQuestion,
+  type AssignedQuestionsResponse,
+  type AvailableQuestionsResponse,
+  type BulkAddResponse,
+  type ExamSetQuestionsSummary,
+} from "./exam-set-questions";
+
+/** @deprecated Use AssignedExamQuestion from exam-set-questions */
 export type AdminExamSetQuestion = {
   question_no: number;
   question_id: string;
@@ -254,16 +327,61 @@ export type AdminExamSetQuestion = {
   correct_answer?: string;
 };
 
-export const adminExamSetQuestionsApi = {
-  list: (examSetId: string) =>
-    apiGet<{ items: AdminExamSetQuestion[] }>(`/admin/exam-sets/${examSetId}/questions`, true),
-  add: (examSetId: string, input: { question_id: string; question_no?: number; score?: number }) =>
-    apiPost<{ status: string }>(`/admin/exam-sets/${examSetId}/questions`, input, true),
-  reorder: (
-    examSetId: string,
-    items: { question_id: string; question_no: number }[]
-  ) =>
-    apiPut<{ status: string }>(`/admin/exam-sets/${examSetId}/questions/reorder`, { items }, true),
-  remove: (examSetId: string, questionId: string) =>
-    apiDelete<{ status: string }>(`/admin/exam-sets/${examSetId}/questions/${questionId}`, true),
+// --- Question Import ---
+
+export type ImportPreviewRow = {
+  row_number: number;
+  valid: boolean;
+  errors: string[];
+  warnings: string[];
+  data: {
+    subject_code: string;
+    question_text: string;
+    choice_a: string;
+    choice_b: string;
+    choice_c: string;
+    choice_d: string;
+    correct_choice: string;
+    explanation?: string;
+    difficulty?: string;
+    status?: string;
+  };
+};
+
+export type ImportPreviewResult = {
+  import_id: string;
+  filename: string;
+  total_rows: number;
+  valid_rows: number;
+  invalid_rows: number;
+  rows: ImportPreviewRow[];
+};
+
+export type ImportConfirmResult = {
+  import_id: string;
+  status: string;
+  imported_questions: number;
+  skipped_rows: number;
+  failed_rows?: number;
+};
+
+export const adminQuestionImportApi = {
+  downloadTemplate: async () => {
+    const blob = await apiDownloadBlob("/admin/questions/import/template", true);
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "question-import-template.csv";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  },
+  preview: (file: File) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    return apiPostFormData<ImportPreviewResult>("/admin/questions/import/preview", formData, true);
+  },
+  confirm: (input: { import_id: string; import_only_valid_rows: boolean }) =>
+    apiPost<ImportConfirmResult>("/admin/questions/import/confirm", input, true),
 };
