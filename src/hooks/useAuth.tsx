@@ -14,6 +14,7 @@ import {
   getStoredToken,
   getStoredUser,
   persistAuth,
+  setStoredToken,
 } from "@/lib/auth";
 import type {
   AuthContextValue,
@@ -69,6 +70,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(result.user);
   }, []);
 
+  const loginWithToken = useCallback(async (token: string) => {
+    setStoredToken(token);
+    setToken(token);
+    const me = await apiGet<AuthUser>("/auth/me", true, true);
+    persistAuth(token, me);
+    setUser(me);
+  }, []);
+
   const register = useCallback(async (input: RegisterInput) => {
     const result = await apiPost<Partial<LoginResponse>>("/auth/register", {
       display_name: input.display_name,
@@ -92,6 +101,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(null);
   }, []);
 
+  const updateUser = useCallback((patch: Partial<AuthUser>) => {
+    setUser((prev) => {
+      if (!prev) return prev;
+      const next = { ...prev, ...patch };
+      const storedToken = getStoredToken();
+      if (storedToken) {
+        persistAuth(storedToken, next);
+      }
+      return next;
+    });
+  }, []);
+
   const value = useMemo<AuthContextValue>(
     () => ({
       user,
@@ -99,11 +120,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       loading,
       isAuthenticated: Boolean(token && user),
       login,
+      loginWithToken,
       register,
       logout,
       refreshMe,
+      updateUser,
     }),
-    [user, token, loading, login, register, logout, refreshMe]
+    [user, token, loading, login, loginWithToken, register, logout, refreshMe, updateUser]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

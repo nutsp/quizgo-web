@@ -1,4 +1,5 @@
-import { apiDelete, apiGet, apiPost, apiPut } from "@/lib/api";
+import { apiGet, apiDelete, apiPost, apiPut } from "@/lib/api";
+import { resultApi } from "@/lib/api/resultApi";
 import type {
   ExamSetItem,
   ExamSetResultDetail,
@@ -10,8 +11,6 @@ import type {
   MyResultsSummary,
   PaginatedAttempts,
   PaginatedExamSets,
-  ResultResponse,
-  ReviewResponse,
   StartAttemptResponse,
   SubmitResponse,
 } from "@/lib/api/types";
@@ -76,11 +75,11 @@ export function submitAttempt(attemptId: string) {
 }
 
 export function getResult(attemptId: string) {
-  return apiGet<ResultResponse>(`/attempts/${attemptId}/result`, true);
+  return resultApi.getAttemptResult(attemptId);
 }
 
 export function getReview(attemptId: string) {
-  return apiGet<ReviewResponse>(`/attempts/${attemptId}/review`, true);
+  return resultApi.getAttemptReview(attemptId);
 }
 
 export function getMyResultsSummary() {

@@ -12,6 +12,7 @@ import {
   Shield,
   Target,
   TrendingUp,
+  Trophy,
 } from "lucide-react";
 import { ExamCoverImage } from "@/components/exam/ExamCoverImage";
 import { StartExamModal } from "@/components/exam/StartExamModal";
@@ -117,6 +118,12 @@ function ExamDetailContent({ examSet }: { examSet: ExamSet }) {
               <Button size="lg" className="w-full" onClick={() => setModalOpen(true)}>
                 เริ่มทำข้อสอบ
               </Button>
+              <Button asChild variant="outline" size="lg" className="w-full">
+                <Link href={`/exams/${examSet.code}/leaderboard`}>
+                  <Trophy className="h-4 w-4" />
+                  ดูกระดานอันดับ
+                </Link>
+              </Button>
             </div>
 
             <div className="hidden space-y-4 lg:block">
@@ -136,6 +143,12 @@ function ExamDetailContent({ examSet }: { examSet: ExamSet }) {
                 </div>
                 <Button size="lg" onClick={() => setModalOpen(true)}>
                   เริ่มทำข้อสอบ
+                </Button>
+                <Button asChild variant="outline" size="lg">
+                  <Link href={`/exams/${examSet.code}/leaderboard`}>
+                    <Trophy className="h-4 w-4" />
+                    ดูกระดานอันดับ
+                  </Link>
                 </Button>
               </div>
             </div>
@@ -167,6 +180,12 @@ function ExamDetailContent({ examSet }: { examSet: ExamSet }) {
               </div>
               <Button size="lg" className="w-full" onClick={() => setModalOpen(true)}>
                 เริ่มทำข้อสอบ
+              </Button>
+              <Button asChild variant="outline" size="lg" className="w-full">
+                <Link href={`/exams/${examSet.code}/leaderboard`}>
+                  <Trophy className="h-4 w-4" />
+                  ดูกระดานอันดับ
+                </Link>
               </Button>
             </div>
           </aside>

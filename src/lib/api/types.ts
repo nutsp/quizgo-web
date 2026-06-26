@@ -10,6 +10,7 @@ export interface ApiErrorBody {
 export interface ApiUser {
   id: string;
   display_name: string;
+  public_display_name?: string;
   email: string;
   role: string;
 }
@@ -93,6 +94,11 @@ export interface ApiChoice {
   choice_text: string;
 }
 
+export interface ReviewChoice extends ApiChoice {
+  is_selected: boolean;
+  is_correct: boolean;
+}
+
 export interface ApiQuestion {
   question_no: number;
   question_id: string;
@@ -149,21 +155,34 @@ export interface SubmitResponse {
 export interface SubjectBreakdownItem {
   subject_name: string;
   correct: number;
+  wrong: number;
+  unanswered: number;
   total: number;
   score_percent: number;
 }
 
-export interface ResultResponse {
-  attempt_id: string;
+export interface WeaknessAnalysisItem {
+  subject_name: string;
+  score_percent: number;
+  recommendation: string;
+}
+
+export interface ResultSummary {
   status: string;
   score: number;
   total_score: number;
   score_percent: number;
+  passed: boolean;
   correct_count: number;
   wrong_count: number;
   unanswered_count: number;
   duration_seconds: number;
-  passed: boolean;
+  started_at: string;
+  submitted_at?: string | null;
+}
+
+export interface ResultResponse {
+  attempt_id: string;
   exam_set: {
     code: string;
     title: string;
@@ -171,19 +190,21 @@ export interface ResultResponse {
     total_questions: number;
     passing_score?: number;
   };
+  exam_track: ExamTrackRef;
+  summary: ResultSummary;
   subject_breakdown: SubjectBreakdownItem[];
-  weakness_analysis: SubjectBreakdownItem[];
-  next_recommended_actions: string[];
+  weakness_analysis: WeaknessAnalysisItem[];
 }
 
 export interface ReviewQuestion {
   question_no: number;
   question_id: string;
   question_text: string;
-  choices: ApiChoice[];
+  choices: ReviewChoice[];
   selected_choice_key: string | null;
   correct_choice_key: string;
   is_correct: boolean;
+  is_unanswered: boolean;
   explanation: string;
   subject: string;
 }
@@ -336,3 +357,89 @@ export interface ExamSetResultDetail {
     submitted_at?: string | null;
   }[];
 }
+
+export interface LeaderboardPagination {
+  page: number;
+  limit: number;
+  total: number;
+}
+
+export interface ExamSetLeaderboardEntry {
+  rank: number;
+  user_id: string;
+  display_name: string;
+  is_current_user: boolean;
+  score: number;
+  total_score: number;
+  score_percent: number;
+  passed: boolean;
+  duration_seconds: number;
+  submitted_at?: string | null;
+}
+
+export interface ExamSetCurrentUserRank {
+  rank: number;
+  score_percent: number;
+  duration_seconds: number;
+  submitted_at?: string | null;
+}
+
+export interface ExamSetLeaderboardResponse {
+  exam_set: {
+    code: string;
+    title: string;
+    exam_track_name: string;
+  };
+  leaderboard: ExamSetLeaderboardEntry[];
+  current_user_rank?: ExamSetCurrentUserRank | null;
+  pagination: LeaderboardPagination;
+}
+
+export interface ExamTrackLeaderboardEntry {
+  rank: number;
+  user_id: string;
+  display_name: string;
+  is_current_user: boolean;
+  average_score_percent: number;
+  completed_exam_sets: number;
+  passed_exam_sets: number;
+  pass_rate_percent: number;
+  latest_submitted_at?: string | null;
+}
+
+export interface ExamTrackCurrentUserRank {
+  rank: number;
+  average_score_percent: number;
+  completed_exam_sets: number;
+  passed_exam_sets: number;
+  pass_rate_percent: number;
+}
+
+export interface ExamTrackLeaderboardResponse {
+  exam_track: {
+    code: string;
+    name: string;
+  };
+  leaderboard: ExamTrackLeaderboardEntry[];
+  current_user_rank?: ExamTrackCurrentUserRank | null;
+  pagination: LeaderboardPagination;
+}
+
+export type UserProfile = {
+  id: string;
+  email: string;
+  display_name?: string | null;
+  public_display_name: string;
+  role: "user" | "admin";
+  created_at?: string;
+  stats?: {
+    total_attempts: number;
+    completed_exam_sets: number;
+    average_score_percent: number;
+    best_score_percent: number;
+  };
+};
+
+export type UpdateProfileInput = {
+  display_name: string;
+};

@@ -3,6 +3,7 @@ import { Noto_Sans_Thai } from "next/font/google";
 import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
 import { Navbar } from "@/components/layout/Navbar";
 import { AuthProvider } from "@/hooks/useAuth";
+import { ToastProvider } from "@/hooks/useToast";
 import "./globals.css";
 
 const notoSansThai = Noto_Sans_Thai({
@@ -26,9 +27,11 @@ export default function RootLayout({
     <html lang="th">
       <body className={`${notoSansThai.variable} font-sans antialiased`}>
         <AuthProvider>
-          <Navbar />
-          <main className="min-h-screen pb-20 md:pb-0">{children}</main>
-          <MobileBottomNav />
+          <ToastProvider>
+            <Navbar />
+            <main className="min-h-screen pb-20 md:pb-0">{children}</main>
+            <MobileBottomNav />
+          </ToastProvider>
         </AuthProvider>
       </body>
     </html>

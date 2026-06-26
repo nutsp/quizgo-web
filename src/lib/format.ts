@@ -30,6 +30,37 @@ export function formatThaiDate(date: string): string {
   });
 }
 
+/** Alias for optional datetime fields on result/review pages. */
+export function formatThaiDateTime(value?: string | null): string {
+  if (!value) return "-";
+  return formatThaiDate(value);
+}
+
 export function formatScore(score: number, total: number): string {
   return `${Math.round(score)}/${Math.round(total)}`;
+}
+
+export function maskEmail(email: string): string {
+  const parts = email.split("@");
+  if (parts.length !== 2) return "***";
+  const local = parts[0];
+  const domain = parts[1];
+  if (local.length <= 2) {
+    return `${local.slice(0, 1) || ""}***@${domain}`;
+  }
+  return `${local.slice(0, 2)}***@${domain}`;
+}
+
+export function publicDisplayName(displayName?: string | null, email?: string): string {
+  const trimmed = displayName?.trim();
+  if (trimmed) return trimmed;
+  if (email) return maskEmail(email);
+  return "ผู้ใช้";
+}
+
+export function leaderboardDisplayName(
+  name: string,
+  isCurrentUser: boolean
+): string {
+  return isCurrentUser ? `${name} (คุณ)` : name;
 }

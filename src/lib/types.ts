@@ -1,6 +1,7 @@
 export type AuthUser = {
   id: string;
   display_name: string;
+  public_display_name?: string;
   email: string;
   role: string;
   avatar_url?: string | null;
@@ -23,9 +24,11 @@ export type AuthContextValue = {
   loading: boolean;
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<void>;
+  loginWithToken: (token: string) => Promise<void>;
   register: (input: RegisterInput) => Promise<boolean>;
   logout: () => void;
   refreshMe: () => Promise<void>;
+  updateUser: (patch: Partial<AuthUser>) => void;
 };
 
 export interface ApiErrorBody {

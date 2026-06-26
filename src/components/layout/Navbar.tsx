@@ -28,6 +28,11 @@ const authLinks = [
   { href: "#", label: "ราคา" },
 ];
 
+function getNavDisplayName(user: { display_name?: string } | null): string {
+  const name = user?.display_name?.trim();
+  return name || "บัญชีของฉัน";
+}
+
 function getInitials(name: string): string {
   const parts = name.trim().split(/\s+/);
   if (parts.length >= 2) {
@@ -43,7 +48,10 @@ export function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const isExamTaking = pathname.includes("/take");
-  const isAuthPage = pathname === "/login" || pathname === "/register";
+  const isAuthPage =
+    pathname === "/login" ||
+    pathname === "/register" ||
+    pathname === "/auth/callback";
   const isAdminPage = pathname.startsWith("/admin");
 
   if (isExamTaking || isAuthPage || isAdminPage) return null;
@@ -104,19 +112,19 @@ export function Navbar() {
                     className="hidden items-center gap-2 rounded-xl border border-border bg-background px-2 py-1.5 text-sm transition-colors hover:bg-background/80 sm:flex"
                   >
                     <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
-                      {user ? getInitials(user.display_name) : "?"}
+                      {user ? getInitials(getNavDisplayName(user)) : "?"}
                     </div>
                     <span className="max-w-[120px] truncate font-medium text-foreground">
-                      {user?.display_name}
+                      {getNavDisplayName(user)}
                     </span>
                     <ChevronDown className="h-4 w-4 text-muted" />
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48">
                   <DropdownMenuItem asChild>
-                    <Link href="#">
+                    <Link href="/profile">
                       <User className="h-4 w-4" />
-                      โปรไฟล์
+                      โปรไฟล์ของฉัน
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
@@ -178,7 +186,20 @@ export function Navbar() {
           ))}
 
           {isAuthenticated ? (
-            <button
+            <>
+              <Link
+                href="/profile"
+                onClick={() => setMobileOpen(false)}
+                className={cn(
+                  "block rounded-lg px-3 py-2.5 text-sm font-medium",
+                  pathname === "/profile" || pathname.startsWith("/me/profile")
+                    ? "bg-primary/10 text-primary"
+                    : "text-muted"
+                )}
+              >
+                โปรไฟล์ของฉัน
+              </Link>
+              <button
               type="button"
               onClick={() => {
                 setMobileOpen(false);
@@ -188,6 +209,7 @@ export function Navbar() {
             >
               ออกจากระบบ
             </button>
+            </>
           ) : (
             <div className="mt-3 flex gap-2">
               <Button asChild variant="outline" className="flex-1">

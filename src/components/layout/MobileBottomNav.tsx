@@ -26,7 +26,10 @@ export function MobileBottomNav() {
   const { isAuthenticated } = useAuth();
 
   const isExamTaking = pathname.includes("/take");
-  const isAuthPage = pathname === "/login" || pathname === "/register";
+  const isAuthPage =
+    pathname === "/login" ||
+    pathname === "/register" ||
+    pathname === "/auth/callback";
   const isAdminPage = pathname.startsWith("/admin");
 
   if (isExamTaking || isAuthPage || isAdminPage) return null;
