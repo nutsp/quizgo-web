@@ -1,4 +1,15 @@
-import { apiDelete, apiDownloadBlob, apiGet, apiPost, apiPostFormData, apiPut } from "@/lib/api";
+import { apiDelete, apiDownloadBlob, apiGet, apiPatch, apiPost, apiPostFormData, apiPut } from "@/lib/api";
+import type { PaginatedResponse, PaginationParams } from "@/lib/api/pagination";
+
+export type { PaginatedResponse, PaginationMeta, PaginationParams } from "@/lib/api/pagination";
+
+function listQuery(params?: Record<string, string | number | undefined | null>): string {
+  if (!params) return "";
+  const entries = Object.entries(params)
+    .filter(([, v]) => v !== undefined && v !== null && v !== "")
+    .map(([k, v]) => [k, String(v)] as [string, string]);
+  return entries.length ? `?${new URLSearchParams(entries)}` : "";
+}
 
 // --- Dashboard ---
 
@@ -55,12 +66,7 @@ export type AdminExamTrack = {
   updated_at: string;
 };
 
-export type AdminExamTrackList = {
-  items: AdminExamTrack[];
-  total_items: number;
-  page: number;
-  limit: number;
-};
+export type AdminExamTrackList = PaginatedResponse<AdminExamTrack>;
 
 export type ExamTrackInput = {
   name: string;
@@ -71,9 +77,8 @@ export type ExamTrackInput = {
 };
 
 export const adminExamTracksApi = {
-  list: (params?: Record<string, string>) => {
-    const query = params ? `?${new URLSearchParams(params)}` : "";
-    return apiGet<AdminExamTrackList>(`/admin/exam-tracks${query}`, true);
+  list: (params?: PaginationParams & Record<string, string | number | undefined>) => {
+    return apiGet<AdminExamTrackList>(`/admin/exam-tracks${listQuery(params)}`, true);
   },
   get: (id: string) => apiGet<AdminExamTrack>(`/admin/exam-tracks/${id}`, true),
   create: (input: ExamTrackInput) => apiPost<AdminExamTrack>("/admin/exam-tracks", input, true),
@@ -136,6 +141,12 @@ export type PublishStatusResponse = {
   is_active?: boolean;
 };
 
+import {
+  type AnswerSheetLayoutConfig,
+} from "@/lib/exam/answerSheetLayout";
+
+export type AnswerSheetLayoutInput = AnswerSheetLayoutConfig;
+
 export type AdminExamSet = {
   id: string;
   exam_track_id: string;
@@ -157,17 +168,12 @@ export type AdminExamSet = {
   is_active: boolean;
   status?: ExamSetStatus;
   exam_track?: { code: string; name: string };
+  answer_sheet_layout?: AnswerSheetLayoutConfig;
   created_at: string;
   updated_at: string;
 };
 
-export type AdminExamSetList = {
-  items: AdminExamSet[];
-  total_items: number;
-  page: number;
-  limit: number;
-  total_pages: number;
-};
+export type AdminExamSetList = PaginatedResponse<AdminExamSet>;
 
 export type ExamSetInput = {
   exam_track_id: string;
@@ -187,12 +193,12 @@ export type ExamSetInput = {
   is_official: boolean;
   is_featured: boolean;
   is_active: boolean;
+  answer_sheet_layout: AnswerSheetLayoutConfig;
 };
 
 export const adminExamSetsApi = {
-  list: (params?: Record<string, string>) => {
-    const query = params ? `?${new URLSearchParams(params)}` : "";
-    return apiGet<AdminExamSetList>(`/admin/exam-sets${query}`, true);
+  list: (params?: PaginationParams & Record<string, string | number | undefined>) => {
+    return apiGet<AdminExamSetList>(`/admin/exam-sets${listQuery(params)}`, true);
   },
   get: (id: string) => apiGet<AdminExamSet>(`/admin/exam-sets/${id}`, true),
   create: (input: ExamSetInput) => apiPost<AdminExamSet>("/admin/exam-sets", input, true),
@@ -224,12 +230,7 @@ export type AdminSubject = {
   updated_at: string;
 };
 
-export type AdminSubjectList = {
-  items: AdminSubject[];
-  total_items: number;
-  page: number;
-  limit: number;
-};
+export type AdminSubjectList = PaginatedResponse<AdminSubject>;
 
 export type SubjectInput = {
   name: string;
@@ -238,15 +239,61 @@ export type SubjectInput = {
 };
 
 export const adminSubjectsApi = {
-  list: (params?: Record<string, string>) => {
-    const query = params ? `?${new URLSearchParams(params)}` : "";
-    return apiGet<AdminSubjectList>(`/admin/subjects${query}`, true);
+  list: (params?: PaginationParams & Record<string, string | number | undefined>) => {
+    return apiGet<AdminSubjectList>(`/admin/subjects${listQuery(params)}`, true);
   },
   get: (id: string) => apiGet<AdminSubject>(`/admin/subjects/${id}`, true),
   create: (input: SubjectInput) => apiPost<AdminSubject>("/admin/subjects", input, true),
   update: (id: string, input: SubjectInput) =>
     apiPut<AdminSubject>(`/admin/subjects/${id}`, input, true),
   delete: (id: string) => apiDelete<{ status: string }>(`/admin/subjects/${id}`, true),
+};
+
+// --- Question Tags ---
+
+export type AdminQuestionTag = {
+  id: string;
+  name: string;
+  code: string;
+  description?: string;
+  color?: string;
+  is_active: boolean;
+  question_count: number;
+  created_at: string;
+  updated_at: string;
+};
+
+export type AdminQuestionTagList = PaginatedResponse<AdminQuestionTag>;
+
+export type QuestionTagInput = {
+  name: string;
+  code: string;
+  description?: string;
+  color?: string;
+  is_active?: boolean;
+};
+
+export type QuestionTagSummary = {
+  id: string;
+  name: string;
+  code: string;
+  color?: string;
+};
+
+export const adminQuestionTagsApi = {
+  list: (params?: PaginationParams & Record<string, string | number | undefined>) => {
+    return apiGet<AdminQuestionTagList>(`/admin/question-tags${listQuery(params)}`, true);
+  },
+  get: (id: string) => apiGet<AdminQuestionTag>(`/admin/question-tags/${id}`, true),
+  create: (input: QuestionTagInput) =>
+    apiPost<AdminQuestionTag>("/admin/question-tags", input, true),
+  update: (id: string, input: QuestionTagInput) =>
+    apiPut<AdminQuestionTag>(`/admin/question-tags/${id}`, input, true),
+  delete: (id: string) =>
+    apiDelete<{ status: string; message?: string; tag?: AdminQuestionTag }>(
+      `/admin/question-tags/${id}`,
+      true
+    ),
 };
 
 // --- Questions ---
@@ -271,16 +318,12 @@ export type AdminQuestion = {
   is_active: boolean;
   correct_answer?: string;
   choices?: AdminChoice[];
+  tags?: QuestionTagSummary[];
   created_at: string;
   updated_at: string;
 };
 
-export type AdminQuestionList = {
-  items: AdminQuestion[];
-  total_items: number;
-  page: number;
-  limit: number;
-};
+export type AdminQuestionList = PaginatedResponse<AdminQuestion>;
 
 export type QuestionInput = {
   subject_id: string;
@@ -288,13 +331,13 @@ export type QuestionInput = {
   difficulty: string;
   explanation?: string;
   status: string;
+  tag_ids?: string[];
   choices: AdminChoice[];
 };
 
 export const adminQuestionsApi = {
-  list: (params?: Record<string, string>) => {
-    const query = params ? `?${new URLSearchParams(params)}` : "";
-    return apiGet<AdminQuestionList>(`/admin/questions${query}`, true);
+  list: (params?: PaginationParams & Record<string, string | number | undefined>) => {
+    return apiGet<AdminQuestionList>(`/admin/questions${listQuery(params)}`, true);
   },
   get: (id: string) => apiGet<AdminQuestion>(`/admin/questions/${id}`, true),
   create: (input: QuestionInput) => apiPost<AdminQuestion>("/admin/questions", input, true),
@@ -336,6 +379,7 @@ export type ImportPreviewRow = {
   warnings: string[];
   data: {
     subject_code: string;
+    tags?: string;
     question_text: string;
     choice_a: string;
     choice_b: string;
@@ -365,6 +409,22 @@ export type ImportConfirmResult = {
   failed_rows?: number;
 };
 
+export type ImportJob = {
+  id: string;
+  filename: string;
+  status: string;
+  total_rows: number;
+  valid_rows: number;
+  invalid_rows: number;
+  imported_questions: number;
+  skipped_rows: number;
+  failed_rows: number;
+  created_at: string;
+  confirmed_at?: string | null;
+};
+
+export type ImportJobList = PaginatedResponse<ImportJob>;
+
 export const adminQuestionImportApi = {
   downloadTemplate: async () => {
     const blob = await apiDownloadBlob("/admin/questions/import/template", true);
@@ -384,4 +444,166 @@ export const adminQuestionImportApi = {
   },
   confirm: (input: { import_id: string; import_only_valid_rows: boolean }) =>
     apiPost<ImportConfirmResult>("/admin/questions/import/confirm", input, true),
+  listJobs: (params?: PaginationParams & Record<string, string | number | undefined>) => {
+    return apiGet<ImportJobList>(`/admin/questions/import/jobs${listQuery(params)}`, true);
+  },
+};
+
+// --- Users ---
+
+export type DisplayAccessType = "free" | "exam_set" | "premium";
+
+export type UserAccessSummary = {
+  display_access_type: DisplayAccessType;
+  has_premium: boolean;
+  active_exam_set_count: number;
+  premium_expires_at?: string | null;
+};
+
+export type AdminUser = {
+  id: string;
+  email: string;
+  display_name?: string | null;
+  role: string;
+  status: string;
+  last_login_at?: string | null;
+  created_at: string;
+  access_summary: UserAccessSummary;
+};
+
+export type AdminUserList = PaginatedResponse<AdminUser>;
+
+export type AdminUserDetail = AdminUser & {
+  recent_access_logs: AdminAccessLogSummary[];
+  recent_audit_logs: AdminAuditLogSummary[];
+};
+
+export type AdminAccessLogSummary = {
+  id: string;
+  event_type: string;
+  success: boolean;
+  ip_address?: string;
+  message?: string;
+  created_at: string;
+};
+
+export type AdminAuditLogSummary = {
+  id: string;
+  action: string;
+  resource_type: string;
+  resource_name?: string;
+  created_at: string;
+};
+
+export type AdminUserUpdateInput = {
+  display_name?: string;
+  role?: string;
+  status?: string;
+};
+
+export const adminUsersApi = {
+  list: (params?: PaginationParams & Record<string, string | number | undefined>) => {
+    return apiGet<AdminUserList>(`/admin/users${listQuery(params)}`, true);
+  },
+  get: (id: string) => apiGet<AdminUserDetail>(`/admin/users/${id}`, true),
+  update: (id: string, input: AdminUserUpdateInput) =>
+    apiPut<AdminUser>(`/admin/users/${id}`, input, true),
+  updateStatus: (id: string, status: string) =>
+    apiPatch<AdminUser>(`/admin/users/${id}/status`, { status }, true),
+  updateRole: (id: string, role: string) =>
+    apiPatch<AdminUser>(`/admin/users/${id}/role`, { role }, true),
+};
+
+// --- Access Logs ---
+
+export type AdminAccessLog = {
+  id: string;
+  user_id?: string | null;
+  email?: string;
+  event_type: string;
+  success: boolean;
+  ip_address?: string;
+  user_agent?: string;
+  message?: string;
+  metadata?: Record<string, unknown>;
+  created_at: string;
+};
+
+export type AdminAccessLogList = PaginatedResponse<AdminAccessLog>;
+
+export const adminAccessLogsApi = {
+  list: (params?: PaginationParams & Record<string, string | number | undefined>) => {
+    return apiGet<AdminAccessLogList>(`/admin/access-logs${listQuery(params)}`, true);
+  },
+};
+
+// --- Audit Logs ---
+
+export type AdminAuditLog = {
+  id: string;
+  actor_user_id?: string | null;
+  actor_email?: string;
+  action: string;
+  resource_type: string;
+  resource_id?: string | null;
+  resource_name?: string;
+  before_data?: unknown;
+  after_data?: unknown;
+  ip_address?: string;
+  user_agent?: string;
+  metadata?: Record<string, unknown>;
+  created_at: string;
+};
+
+export type AdminAuditLogList = PaginatedResponse<AdminAuditLog>;
+
+export const adminAuditLogsApi = {
+  list: (params?: PaginationParams & Record<string, string | number | undefined>) => {
+    return apiGet<AdminAuditLogList>(`/admin/audit-logs${listQuery(params)}`, true);
+  },
+  get: (id: string) => apiGet<AdminAuditLog>(`/admin/audit-logs/${id}`, true),
+};
+
+// --- Entitlements ---
+
+export type UserEntitlement = {
+  id: string;
+  user_id: string;
+  entitlement_type: "exam_set" | "premium";
+  ref_type?: "exam_set" | null;
+  ref_id?: string | null;
+  ref_name?: string | null;
+  source: "manual" | "purchase" | "subscription";
+  starts_at: string;
+  expires_at?: string | null;
+  is_active: boolean;
+  status: "active" | "expired" | "revoked" | "pending";
+  notes?: string | null;
+  granted_by?: string | null;
+  granted_by_name?: string | null;
+  created_at: string;
+};
+
+export type UserEntitlementList = PaginatedResponse<UserEntitlement>;
+
+export type GrantExamSetEntitlementInput = {
+  exam_set_id: string;
+  expires_at?: string | null;
+  notes?: string | null;
+};
+
+export type GrantPremiumEntitlementInput = {
+  expires_at: string;
+  notes?: string | null;
+};
+
+export const adminEntitlementsApi = {
+  listUserEntitlements: (userId: string, params?: PaginationParams) =>
+    apiGet<UserEntitlementList>(`/admin/users/${userId}/entitlements${listQuery(params)}`, true),
+  grantExamSet: (userId: string, input: GrantExamSetEntitlementInput) =>
+    apiPost<UserEntitlement>(`/admin/users/${userId}/entitlements/exam-set`, input, true),
+  grantPremium: (userId: string, input: GrantPremiumEntitlementInput) =>
+    apiPost<UserEntitlement>(`/admin/users/${userId}/entitlements/premium`, input, true),
+  revoke: (entitlementId: string) =>
+    apiDelete<UserEntitlement>(`/admin/entitlements/${entitlementId}`, true),
 };
