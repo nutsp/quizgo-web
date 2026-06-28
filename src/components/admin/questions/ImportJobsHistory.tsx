@@ -17,7 +17,6 @@ import {
 import { useAdminListParams } from "@/hooks/useAdminListParams";
 import { adminQuestionImportApi, type ImportJob } from "@/lib/api/admin/endpoints";
 import { formatDateTime } from "@/lib/admin/labels";
-import { toUserFriendlyError } from "@/lib/api";
 
 export function ImportJobsHistory() {
   const { params, updateParams, searchKey } = useAdminListParams("status");

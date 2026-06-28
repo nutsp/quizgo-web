@@ -6,7 +6,6 @@ import { ExamCoverImage } from "@/components/exam/ExamCoverImage";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
-  canBuySingleExamSet,
   formatBaht,
   getDiscountPercent,
   getEffectivePriceAmount,

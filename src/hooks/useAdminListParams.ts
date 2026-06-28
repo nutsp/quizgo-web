@@ -19,7 +19,7 @@ type BaseParams = {
   limit: number;
   q: string;
   sort: string;
-  order: string;
+  order: "asc" | "desc" | "";
 };
 
 export function useAdminListParams<const T extends readonly string[]>(
