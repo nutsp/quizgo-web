@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { CheckCircle2, Crown, Lock, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -9,6 +10,8 @@ import {
   getExamAccessCardStatus,
   getExamDetailAccessOptions,
   getExamDetailCTA,
+  hasSubmittedHistory,
+  pastResultHref,
 } from "@/lib/exam/access";
 import {
   getExamSetPriceFooterDisplay,
@@ -58,6 +61,8 @@ export function ExamAccessCard({ examSet, onStartExam, compact = false }: ExamAc
     examSet.access_type === "private" || showDualOptions || isBlockedState
       ? null
       : getExamSetPriceFooterDisplay(examSet);
+  const resultHref = pastResultHref(examSet);
+  const showPastResultsLink = hasSubmittedHistory(examSet) && !!resultHref;
 
   const handleCTA = () => {
     if (cta.action === "start_exam") {
@@ -186,6 +191,12 @@ export function ExamAccessCard({ examSet, onStartExam, compact = false }: ExamAc
         ) : (
           <Button size="lg" className="w-full" onClick={handleCTA}>
             {cta.label}
+          </Button>
+        )}
+
+        {showPastResultsLink && resultHref && (
+          <Button asChild size="sm" variant="ghost" className="h-auto px-0 text-teal-700 hover:bg-transparent">
+            <Link href={resultHref}>ดูผลสอบย้อนหลัง</Link>
           </Button>
         )}
 

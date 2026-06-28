@@ -171,10 +171,10 @@ export const filterOptions = {
 
 export const sortOptions = [
   { value: "recommended", label: "แนะนำ" },
-  { value: "popular", label: "ยอดนิยม" },
   { value: "latest", label: "ล่าสุด" },
-  { value: "easy-hard", label: "ง่ายไปยาก" },
-  { value: "short", label: "ใช้เวลาน้อย" },
+  { value: "popular", label: "ยอดนิยม" },
+  { value: "price-low", label: "ราคาต่ำสุด" },
+  { value: "price-high", label: "ราคาสูงสุด" },
 ];
 
 export const quickFilters = [

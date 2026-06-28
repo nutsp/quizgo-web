@@ -9,6 +9,8 @@ interface SearchBarProps {
   title?: string;
   subtitle?: string;
   className?: string;
+  value?: string;
+  onChange?: (value: string) => void;
   chips?: string[];
   onChipClick?: (chip: string) => void;
   activeChip?: string | null;
@@ -19,6 +21,8 @@ export function SearchBar({
   title,
   subtitle,
   className,
+  value,
+  onChange,
   chips,
   onChipClick,
   activeChip,
@@ -40,6 +44,8 @@ export function SearchBar({
         <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
         <Input
           placeholder={placeholder}
+          value={value}
+          onChange={(event) => onChange?.(event.target.value)}
           className="h-11 rounded-2xl border border-slate-200 bg-white pl-10 pr-4 text-sm shadow-none focus-visible:border-teal-500 focus-visible:ring-2 focus-visible:ring-teal-100"
         />
       </div>

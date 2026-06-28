@@ -1,4 +1,4 @@
-import type { ExamSetItem } from "./types";
+import type { ExamSetItem, UserExamActivity } from "./types";
 import type { ExamSet } from "@/lib/exam/format";
 
 export function mapExamSetItemToExamSet(item: ExamSetItem): ExamSet {
@@ -34,6 +34,7 @@ export function mapExamSetItemToExamSet(item: ExamSetItem): ExamSet {
     completed_count: item.completed_count,
     exam_track: track,
     access: item.access,
+    user_activity: item.user_activity as UserExamActivity | undefined,
   };
 }
 

@@ -17,6 +17,12 @@ export type ExamSetAccess = {
   available_options?: Array<"single_purchase" | "premium">;
 };
 
+export type UserExamActivity = {
+  has_submitted_attempts: boolean;
+  latest_submitted_attempt_id?: string | null;
+  latest_score_percent?: number | null;
+};
+
 export type ExamSet = {
   id?: string;
   code: string;
@@ -46,6 +52,7 @@ export type ExamSet = {
     name: string;
   };
   access?: ExamSetAccess;
+  user_activity?: UserExamActivity;
 };
 
 export type ExamSetPriceBadgeVariant =

@@ -58,6 +58,25 @@ function needsLogin(examSet: ExamSet, isAuthenticated: boolean): boolean {
   return examSet.access?.reason === "LOGIN_REQUIRED";
 }
 
+function hasSubmittedHistory(examSet: ExamSet): boolean {
+  return !!examSet.user_activity?.has_submitted_attempts;
+}
+
+function pastResultHref(examSet: ExamSet): string | undefined {
+  const attemptId = examSet.user_activity?.latest_submitted_attempt_id;
+  if (!attemptId) return undefined;
+  return `/exams/${examSet.code}/result?attempt_id=${attemptId}`;
+}
+
+function isPremiumLockedWithoutAccess(examSet: ExamSet): boolean {
+  const access = examSet.access;
+  if (!access || access.can_start) return false;
+  return (
+    access.reason === "PREMIUM_REQUIRED" ||
+    access.reason === "ACCESS_REQUIRED_OR_PREMIUM"
+  );
+}
+
 function unlockPriceLabel(examSet: ExamSet): string {
   return formatBaht(getEffectivePriceAmount(examSet), examSet.currency);
 }
@@ -75,6 +94,26 @@ export function getExamDetailAccessOptions(examSet: ExamSet): ExamDetailAccessOp
 
   if (access?.reason === "PRIVATE_EXAM_ACCESS_REQUIRED") {
     return [];
+  }
+
+  if (isPremiumLockedWithoutAccess(examSet)) {
+    const options: ExamDetailAccessOption[] = [];
+    if (examSet.allow_single_purchase) {
+      options.push({
+        type: "unlock",
+        label: "ปลดล็อกชุดนี้",
+        href: `/exams/${examSet.code}/unlock`,
+        description: "เหมาะสำหรับคนที่ต้องการทำชุดนี้ชุดเดียว",
+        priceLabel: unlockPriceLabel(examSet),
+      });
+    }
+    options.push({
+      type: "premium",
+      label: "ต่ออายุ Premium",
+      href: "/pricing",
+      description: "เข้าถึงข้อสอบ Premium ทั้งหมด",
+    });
+    return options;
   }
 
   if (access?.reason === "ACCESS_REQUIRED") {
@@ -165,6 +204,21 @@ export function getExamDetailCTA(
       return { label: "เริ่มทำข้อสอบ", action: "login" };
     }
     return { label: "เริ่มทำข้อสอบ", action: "start_exam" };
+  }
+
+  if (isPremiumLockedWithoutAccess(examSet)) {
+    if (examSet.allow_single_purchase) {
+      return {
+        label: "ปลดล็อกชุดนี้",
+        action: "unlock",
+        href: `/exams/${examSet.code}/unlock`,
+      };
+    }
+    return {
+      label: "ต่ออายุ Premium",
+      action: "pricing",
+      href: "/pricing",
+    };
   }
 
   const options = getExamDetailAccessOptions(examSet);
@@ -276,6 +330,13 @@ export function getExamAccessCardStatus(examSet: ExamSet): ExamAccessCardStatus 
   }
 
   if (examSet.access_type === "premium") {
+    if (isPremiumLockedWithoutAccess(examSet) && hasSubmittedHistory(examSet)) {
+      return {
+        headline: "Premium หมดอายุแล้ว",
+        subtext: "คุณยังดูผลสอบและเฉลยจากครั้งก่อนได้ แต่ไม่สามารถเริ่มทำชุดใหม่ได้",
+        variant: "premium_locked",
+      };
+    }
     return {
       headline: "สำหรับสมาชิก Premium",
       subtext: "เข้าถึงชุดข้อสอบ Premium ทั้งหมด",
@@ -330,4 +391,4 @@ export function getExamAccessCTA(examSet: ExamSet, isAuthenticated: boolean): Ex
   };
 }
 
-export { canBuySingleExamSet, canAccessWithPremium };
+export { canBuySingleExamSet, canAccessWithPremium, pastResultHref, hasSubmittedHistory };

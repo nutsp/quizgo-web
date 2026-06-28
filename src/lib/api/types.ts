@@ -1,7 +1,7 @@
 import type { AnswerSheetLayoutConfig } from "@/lib/exam/answerSheetLayout";
-import type { ExamSetAccess, ExamSetAccessType } from "@/lib/exam/format";
+import type { ExamSetAccess, ExamSetAccessType, UserExamActivity } from "@/lib/exam/format";
 
-export type { ExamSet, ExamSetDifficulty, ExamSetAccessType, ExamSetMode, ExamSetAccess } from "@/lib/exam/format";
+export type { ExamSet, ExamSetDifficulty, ExamSetAccessType, ExamSetMode, ExamSetAccess, UserExamActivity } from "@/lib/exam/format";
 export type { AnswerSheetLayoutConfig } from "@/lib/exam/answerSheetLayout";
 
 export interface ApiErrorBody {
@@ -72,6 +72,7 @@ export interface ExamSetItem {
   completed_count?: number | null;
   exam_track?: ExamTrackRef;
   access?: ExamSetAccess;
+  user_activity?: UserExamActivity;
   /** @deprecated use exam_track */
   exam_track_code?: string;
   /** @deprecated use exam_track */
@@ -464,12 +465,17 @@ export type MyExamSummary = {
   premium_expires_at?: string | null;
   unlocked_exam_set_count: number;
   private_exam_set_count: number;
+  single_purchase_count?: number;
+  premium_activity_count?: number;
+  grant_count?: number;
 };
 
 export type MyExamAccessSource =
   | "single_purchase"
+  | "manual_grant"
   | "private_grant"
-  | "premium"
+  | "premium_activity"
+  | "free_activity"
   | "granted";
 
 export type MyExamItem = {
@@ -479,6 +485,9 @@ export type MyExamItem = {
   description?: string | null;
   access_type: ExamSetAccessType;
   access_source: MyExamAccessSource;
+  source_label?: string;
+  can_start?: boolean;
+  allow_single_purchase?: boolean;
   cover_image_url?: string | null;
   total_questions: number;
   duration_minutes: number;

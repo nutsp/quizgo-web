@@ -1,67 +1,24 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import Link from "next/link";
-import { Crown, Loader2, Lock, ShieldCheck } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Loader2 } from "lucide-react";
 import { AuthGuard } from "@/components/auth/AuthGuard";
 import { MyExamSetCard } from "@/components/my-exams/MyExamSetCard";
+import { MyExamsEmptyState } from "@/components/my-exams/MyExamsEmptyState";
+import { MyExamsRecommendationPanel } from "@/components/my-exams/MyExamsRecommendationPanel";
+import { MyExamsSummaryCards } from "@/components/my-exams/MyExamsSummaryCards";
+import { MyExamsTabs } from "@/components/my-exams/MyExamsTabs";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { meExamsApi } from "@/lib/api/meExamsApi";
 import { toUserFriendlyError } from "@/lib/api";
 import type { MyExamItem, MyExamSummary } from "@/lib/api/types";
-
-function SummaryCards({ summary }: { summary: MyExamSummary }) {
-  const premiumLabel = summary.has_premium ? "ใช้งานอยู่" : "ยังไม่เปิดใช้งาน";
-  const paidCount = summary.unlocked_exam_set_count - summary.private_exam_set_count;
-
-  return (
-    <div className="grid gap-4 sm:grid-cols-3">
-      <Card>
-        <CardContent className="flex items-start gap-3 p-5">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50 text-amber-600">
-            <Crown className="h-5 w-5" />
-          </div>
-          <div>
-            <p className="text-sm text-muted">Premium</p>
-            <p className="font-semibold text-foreground">{premiumLabel}</p>
-            {summary.has_premium && summary.premium_expires_at && (
-              <p className="mt-1 text-xs text-muted">
-                หมดอายุ {new Date(summary.premium_expires_at).toLocaleDateString("th-TH")}
-              </p>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-      <Card>
-        <CardContent className="flex items-start gap-3 p-5">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
-            <Lock className="h-5 w-5" />
-          </div>
-          <div>
-            <p className="text-sm text-muted">ซื้อรายชุด</p>
-            <p className="font-semibold text-foreground">{Math.max(0, paidCount)} ชุด</p>
-          </div>
-        </CardContent>
-      </Card>
-      <Card>
-        <CardContent className="flex items-start gap-3 p-5">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-50 text-violet-600">
-            <ShieldCheck className="h-5 w-5" />
-          </div>
-          <div>
-            <p className="text-sm text-muted">เฉพาะผู้ได้รับสิทธิ์</p>
-            <p className="font-semibold text-foreground">{summary.private_exam_set_count} ชุด</p>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
-  );
-}
+import { filterMyExamItems, type MyExamTab } from "@/lib/my-exams/filters";
+import { cn } from "@/lib/utils";
 
 function MyExamsContent() {
   const [items, setItems] = useState<MyExamItem[]>([]);
   const [summary, setSummary] = useState<MyExamSummary | null>(null);
+  const [activeTab, setActiveTab] = useState<MyExamTab>("all");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -82,6 +39,11 @@ function MyExamsContent() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  const filteredItems = useMemo(
+    () => filterMyExamItems(items, activeTab),
+    [items, activeTab]
+  );
 
   if (loading) {
     return (
@@ -109,34 +71,50 @@ function MyExamsContent() {
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-foreground md:text-3xl">ข้อสอบของฉัน</h1>
         <p className="mt-2 text-muted">
-          รวมชุดข้อสอบที่คุณปลดล็อกแล้วหรือได้รับสิทธิ์พิเศษจากผู้ดูแลระบบ
+          ข้อสอบที่คุณมีความสัมพันธ์กับชุดนั้นแล้ว ทั้งที่ปลดล็อก ได้รับสิทธิ์ และเคยทำผ่าน Premium หรือข้อสอบฟรี
         </p>
       </div>
 
-      {summary && <SummaryCards summary={summary} />}
-
-      {items.length === 0 ? (
-        <div className="mt-10 rounded-2xl border border-border bg-surface px-6 py-16 text-center">
-          <h2 className="text-lg font-semibold text-foreground">ยังไม่มีข้อสอบในคลังของฉัน</h2>
-          <p className="mx-auto mt-2 max-w-md text-sm text-muted">
-            เมื่อคุณปลดล็อกชุดข้อสอบหรือได้รับสิทธิ์พิเศษจากผู้ดูแลระบบ ชุดข้อสอบจะแสดงที่นี่
-          </p>
-          <div className="mt-6 flex flex-wrap justify-center gap-3">
-            <Button asChild>
-              <Link href="/exams">ไปที่คลังข้อสอบ</Link>
-            </Button>
-            <Button asChild variant="outline">
-              <Link href="/pricing">ดูแพ็กเกจ Premium</Link>
-            </Button>
-          </div>
-        </div>
-      ) : (
-        <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {items.map((item) => (
-            <MyExamSetCard key={item.id} item={item} />
-          ))}
-        </div>
+      {summary && (
+        <MyExamsSummaryCards
+          summary={summary}
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+        />
       )}
+
+      <div className="mt-6">
+        <MyExamsTabs activeTab={activeTab} onTabChange={setActiveTab} />
+      </div>
+
+      <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
+        <section>
+          {filteredItems.length === 0 ? (
+            <MyExamsEmptyState tab={activeTab} />
+          ) : (
+            <div
+              className={cn(
+                "grid gap-6",
+                filteredItems.length === 1
+                  ? "grid-cols-1 sm:max-w-sm"
+                  : "grid-cols-1 sm:grid-cols-2 xl:grid-cols-3"
+              )}
+            >
+              {filteredItems.map((item) => (
+                <MyExamSetCard
+                  key={item.id}
+                  item={item}
+                  hasPremium={summary?.has_premium}
+                />
+              ))}
+            </div>
+          )}
+        </section>
+
+        {summary && (
+          <MyExamsRecommendationPanel items={items} summary={summary} />
+        )}
+      </div>
     </main>
   );
 }

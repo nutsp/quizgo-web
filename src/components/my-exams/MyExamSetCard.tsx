@@ -8,15 +8,19 @@ import {
 import { ExamCoverImage } from "@/components/exam/ExamCoverImage";
 import { Badge } from "@/components/ui/badge";
 import {
-  ACCESS_LABELS,
   DIFFICULTY_LABELS,
   type ExamSetDifficulty,
 } from "@/lib/exam/format";
 import type { MyExamItem } from "@/lib/api/types";
+import {
+  getMyExamFooterActions,
+  getMyExamSourceBadge,
+} from "@/lib/my-exams/filters";
 import { cn } from "@/lib/utils";
 
 type MyExamSetCardProps = {
   item: MyExamItem;
+  hasPremium?: boolean;
 };
 
 const difficultyColor: Record<string, string> = {
@@ -36,17 +40,20 @@ function formatAttemptStatus(item: MyExamItem): string | null {
   return null;
 }
 
-function footerLabel(item: MyExamItem): string {
-  if (item.access_type === "private") return "ได้รับสิทธิ์แล้ว";
-  if (item.access_type === "paid") return "ปลดล็อกแล้ว";
-  return "พร้อมเริ่มทำข้อสอบ";
-}
-
-export function MyExamSetCard({ item }: MyExamSetCardProps) {
+export function MyExamSetCard({ item, hasPremium = false }: MyExamSetCardProps) {
   const detailHref = `/exams/${item.code}`;
+  const resultHref =
+    item.latest_attempt?.attempt_id &&
+    (item.latest_attempt.status === "submitted" ||
+      item.latest_attempt.status === "timeout")
+      ? `/exams/${item.code}/result?attempt_id=${item.latest_attempt.attempt_id}`
+      : null;
   const trackName = item.exam_track?.name ?? "ไม่ระบุสายการสอบ";
   const attemptLabel = formatAttemptStatus(item);
   const difficulty = item.difficulty as ExamSetDifficulty | undefined;
+  const sourceBadge = getMyExamSourceBadge(item);
+  const footerActions = getMyExamFooterActions(item, hasPremium);
+  const primaryFooter = footerActions[0] ?? "ดูรายละเอียด";
 
   return (
     <Link
@@ -56,10 +63,12 @@ export function MyExamSetCard({ item }: MyExamSetCardProps) {
     >
       <article className="flex h-full flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm transition duration-200 group-hover:-translate-y-0.5 group-hover:border-teal-300 group-hover:shadow-xl group-focus-visible:outline-none group-focus-visible:ring-2 group-focus-visible:ring-teal-500">
         <div className="relative h-36 shrink-0 overflow-hidden">
-          <div className="absolute left-3 top-3 z-10">
-            <Badge variant="secondary" className="bg-white/95 text-slate-800">
-              {ACCESS_LABELS[item.access_type]}
-            </Badge>
+          <div className="absolute left-3 top-3 z-10 flex max-w-[calc(100%-1.5rem)] flex-col gap-1">
+            {sourceBadge && (
+              <Badge variant="secondary" className="bg-white/95 text-slate-800">
+                {sourceBadge}
+              </Badge>
+            )}
           </div>
           <ExamCoverImage
             src={item.cover_image_url}
@@ -107,7 +116,23 @@ export function MyExamSetCard({ item }: MyExamSetCardProps) {
             {attemptLabel && (
               <p className="mb-1 text-xs text-slate-500">{attemptLabel}</p>
             )}
-            <p className="text-sm font-semibold text-teal-700">{footerLabel(item)}</p>
+            <p className="text-sm font-semibold text-teal-700">{primaryFooter}</p>
+            {footerActions.length > 1 && (
+              <p className="mt-1 text-xs text-slate-500">
+                {footerActions.slice(1).join(" · ")}
+              </p>
+            )}
+            {resultHref && footerActions.includes("ดูผลสอบ") && (
+              <p
+                className="mt-1 text-xs text-teal-600"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <Link href={resultHref}>เปิดผลสอบล่าสุด</Link>
+              </p>
+            )}
+            <p className="mt-1 text-xs text-slate-400 transition-colors group-hover:text-teal-600">
+              คลิกเพื่อดูรายละเอียด
+            </p>
           </div>
         </div>
       </article>
