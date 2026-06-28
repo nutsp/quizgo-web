@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { Loader2, RefreshCw } from "lucide-react";
 import {
   getMyExamTrackResults,
@@ -15,6 +16,7 @@ import type {
   MyResultsSummary,
 } from "@/lib/api/types";
 import { MyResultsSummaryCards } from "@/components/results/MyResultsSummaryCards";
+import { MyResultsChartsSection } from "@/components/results/my-results/MyResultsChartsSection";
 import { WeakSubjectsCard } from "@/components/results/WeakSubjectsCard";
 import { LatestResultsTable } from "@/components/results/LatestResultsTable";
 import { ExamTrackResultCard } from "@/components/results/ExamTrackResultCard";
@@ -38,8 +40,20 @@ const tabs: { id: Tab; label: string }[] = [
   { id: "history", label: "ประวัติทั้งหมด" },
 ];
 
+const RECENT_RESULTS_LIMIT = 5;
+
+function parseTabParam(value: string | null): Tab | null {
+  if (value === "overview" || value === "tracks" || value === "history") {
+    return value;
+  }
+  return null;
+}
+
 export function MyResultsView() {
-  const [activeTab, setActiveTab] = useState<Tab>("overview");
+  const searchParams = useSearchParams();
+  const [activeTab, setActiveTab] = useState<Tab>(
+    () => parseTabParam(searchParams.get("tab")) ?? "overview"
+  );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -57,11 +71,15 @@ export function MyResultsView() {
   const loadOverview = useCallback(async (cancelled: () => boolean) => {
     const [summaryData, latestData] = await Promise.all([
       getMyResultsSummary(),
-      listMyAttemptResults({ limit: "5", page: "1" }),
+      listMyAttemptResults({
+        limit: String(RECENT_RESULTS_LIMIT),
+        page: "1",
+      }),
     ]);
     if (cancelled()) return;
     setSummary(summaryData);
     setLatestAttempts(latestData.items);
+    setHistoryTotal(latestData.pagination.total);
   }, []);
 
   const loadTracks = useCallback(async (cancelled: () => boolean) => {
@@ -137,6 +155,13 @@ export function MyResultsView() {
   }, [loadOverview, loadTracks, loadHistory]);
 
   useEffect(() => {
+    const tabFromUrl = parseTabParam(searchParams.get("tab"));
+    if (tabFromUrl) {
+      setActiveTab(tabFromUrl);
+    }
+  }, [searchParams]);
+
+  useEffect(() => {
     if (activeTab !== "history") return;
     let cancelled = false;
     loadHistory(() => cancelled, 1).catch((err) => {
@@ -148,6 +173,7 @@ export function MyResultsView() {
   }, [activeTab, trackFilter, statusFilter, searchTitle, loadHistory]);
 
   const isEmpty = summary && summary.total_attempts === 0;
+  const showViewAllHistory = historyTotal > RECENT_RESULTS_LIMIT;
 
   if (loading) {
     return (
@@ -176,10 +202,10 @@ export function MyResultsView() {
       <div className="flex min-h-[50vh] flex-col items-center justify-center gap-4 text-center">
         <h2 className="text-xl font-semibold text-foreground">ยังไม่มีผลสอบ</h2>
         <p className="max-w-md text-muted">
-          เริ่มทำข้อสอบชุดแรกเพื่อดูผลคะแนนและพัฒนาการของคุณ
+          เมื่อคุณส่งคำตอบแล้ว ผลสอบและการวิเคราะห์จะแสดงที่นี่
         </p>
         <Button asChild>
-          <Link href="/exams">ไปที่คลังข้อสอบ</Link>
+          <Link href="/exams">ไปคลังข้อสอบ</Link>
         </Button>
       </div>
     );
@@ -194,32 +220,39 @@ export function MyResultsView() {
         </p>
       </div>
 
-      <div className="flex gap-1 overflow-x-auto rounded-xl border border-border bg-surface p-1">
-        {tabs.map((tab) => (
-          <button
-            key={tab.id}
-            type="button"
-            onClick={() => setActiveTab(tab.id)}
-            className={cn(
-              "shrink-0 rounded-lg px-4 py-2 text-sm font-medium transition-colors",
-              activeTab === tab.id
-                ? "bg-primary text-white"
-                : "text-muted hover:bg-background hover:text-foreground"
-            )}
-          >
-            {tab.label}
-          </button>
-        ))}
+      <div className="-mx-4 overflow-x-auto px-4">
+        <div className="inline-flex min-w-max rounded-2xl border border-slate-200 bg-white p-1 shadow-sm">
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => setActiveTab(tab.id)}
+              className={cn(
+                "rounded-xl px-4 py-2 text-sm font-medium transition",
+                activeTab === tab.id
+                  ? "bg-teal-600 text-white shadow-sm"
+                  : "text-slate-600 hover:bg-slate-50 hover:text-slate-950"
+              )}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {activeTab === "overview" && summary && (
         <div className="space-y-8">
           <MyResultsSummaryCards summary={summary} />
 
+          <MyResultsChartsSection
+            scoreTrend={summary.score_trend ?? []}
+            subjectPerformance={summary.subject_performance ?? []}
+          />
+
           {summary.most_practiced_exam_track && (
-            <p className="text-sm text-muted">
+            <p className="text-sm text-slate-500">
               สายสอบที่ฝึกบ่อยที่สุด:{" "}
-              <strong className="text-foreground">
+              <strong className="text-slate-950">
                 {summary.most_practiced_exam_track.name}
               </strong>
             </p>
@@ -228,14 +261,25 @@ export function MyResultsView() {
           <WeakSubjectsCard subjects={summary.weak_subjects} />
 
           <section>
-            <h2 className="mb-4 text-lg font-semibold">ผลสอบล่าสุด</h2>
+            <div className="mb-4 flex items-center justify-between gap-3">
+              <h2 className="text-xl font-bold text-slate-950">ผลสอบล่าสุด</h2>
+              {showViewAllHistory && (
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("history")}
+                  className="shrink-0 text-sm font-medium text-teal-700 transition-colors hover:text-teal-800"
+                >
+                  ดูประวัติทั้งหมด
+                </button>
+              )}
+            </div>
             <LatestResultsTable items={latestAttempts} />
           </section>
         </div>
       )}
 
       {activeTab === "tracks" && (
-        <div className="grid gap-6 md:grid-cols-2">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
           {trackResults.map((track) => (
             <ExamTrackResultCard key={track.exam_track.code} track={track} />
           ))}
@@ -244,7 +288,7 @@ export function MyResultsView() {
 
       {activeTab === "history" && (
         <div className="space-y-4">
-          <div className="flex flex-col gap-3 rounded-xl border border-border bg-surface p-4 sm:flex-row sm:flex-wrap">
+          <div className="flex flex-col gap-3 rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:flex-row sm:flex-wrap">
             <Select
               value={trackFilter || "all"}
               onValueChange={(v) => setTrackFilter(v === "all" ? "" : v)}

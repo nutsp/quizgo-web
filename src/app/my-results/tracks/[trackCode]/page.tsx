@@ -2,10 +2,10 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { useParams } from "next/navigation";
 import { ArrowLeft, Loader2, TrendingUp } from "lucide-react";
 import { AuthGuard } from "@/components/auth/AuthGuard";
+import { ExamCoverImage } from "@/components/exam/ExamCoverImage";
 import { getMyExamTrackResultDetail } from "@/lib/api/endpoints";
 import { toUserFriendlyError } from "@/lib/api";
 import type { ExamTrackResultDetail } from "@/lib/api/types";
@@ -76,20 +76,14 @@ function TrackResultDetailContent() {
       </Button>
 
       <div className="overflow-hidden rounded-2xl border border-border bg-surface">
-        <div className="relative h-48 w-full bg-background md:h-56">
-          {track.cover_image_url ? (
-            <Image
-              src={track.cover_image_url}
-              alt={track.name}
-              fill
-              className="object-cover"
-              priority
-            />
-          ) : (
-            <div className="flex h-full items-center justify-center bg-primary/10 text-primary">
-              {track.name}
-            </div>
-          )}
+        <div className="relative h-48 w-full md:h-56">
+          <ExamCoverImage
+            src={track.cover_image_url}
+            alt={track.name}
+            title={track.name}
+            className="h-48 w-full md:h-56"
+            priority
+          />
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
           <div className="absolute bottom-0 left-0 right-0 p-6">
             <h1 className="text-2xl font-bold text-white md:text-3xl">{track.name}</h1>
@@ -144,7 +138,7 @@ function TrackResultDetailContent() {
 export default function TrackResultPage() {
   return (
     <AuthGuard>
-      <div className="mx-auto max-w-5xl px-4 py-8 lg:px-8">
+      <div className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <TrackResultDetailContent />
       </div>
     </AuthGuard>

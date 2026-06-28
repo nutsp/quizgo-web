@@ -1,6 +1,6 @@
 import Link from "next/link";
-import Image from "next/image";
 import type { ExamSetProgressItem } from "@/lib/api/types";
+import { ExamCoverImage } from "@/components/exam/ExamCoverImage";
 import { formatPercent, formatThaiDate } from "@/lib/format";
 import { ResultStatusBadge } from "./ResultStatusBadge";
 import { Button } from "@/components/ui/button";
@@ -18,21 +18,13 @@ export function ExamSetProgressCard({ item }: ExamSetProgressCardProps) {
   return (
     <Card>
       <CardContent className="flex flex-col gap-4 p-4 sm:flex-row sm:items-center">
-        <div className="relative h-20 w-full shrink-0 overflow-hidden rounded-lg bg-background sm:h-16 sm:w-24">
-          {set.cover_image_url ? (
-            <Image
-              src={set.cover_image_url}
-              alt={set.title}
-              fill
-              className="object-cover"
-              sizes="96px"
-            />
-          ) : (
-            <div className="flex h-full items-center justify-center bg-primary/10 text-xs text-primary">
-              {set.code}
-            </div>
-          )}
-        </div>
+        <ExamCoverImage
+          src={set.cover_image_url}
+          alt={set.title}
+          title={set.title}
+          className="h-20 w-full shrink-0 rounded-lg sm:h-16 sm:w-24"
+          iconClassName="h-6 w-6"
+        />
 
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">

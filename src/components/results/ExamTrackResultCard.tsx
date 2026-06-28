@@ -1,6 +1,6 @@
 import Link from "next/link";
-import Image from "next/image";
 import { ArrowRight, TrendingUp } from "lucide-react";
+import { ExamCoverImage } from "@/components/exam/ExamCoverImage";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -20,20 +20,14 @@ export function ExamTrackResultCard({ track }: ExamTrackResultCardProps) {
 
   return (
     <Card className="overflow-hidden">
-      <div className="relative h-36 w-full bg-background">
-        {t.cover_image_url ? (
-          <Image
-            src={t.cover_image_url}
-            alt={t.name}
-            fill
-            className="object-cover"
-            sizes="(max-width: 768px) 100vw, 400px"
-          />
-        ) : (
-          <div className="flex h-full items-center justify-center bg-primary/10 text-primary">
-            {t.name}
-          </div>
-        )}
+      <div className="relative h-36 w-full">
+        <ExamCoverImage
+          src={t.cover_image_url}
+          alt={t.name}
+          title={t.name}
+          className="h-36 w-full"
+          priority
+        />
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
         <div className="absolute bottom-3 left-4 right-4">
           <h3 className="text-lg font-bold text-white">{t.name}</h3>

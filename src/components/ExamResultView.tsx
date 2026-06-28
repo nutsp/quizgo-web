@@ -147,7 +147,7 @@ export function ExamResultView({ examSetCode }: ExamResultViewProps) {
   const passingScore = result.exam_set.passing_score ?? 60;
 
   return (
-    <div className="mx-auto max-w-6xl space-y-4 px-4 py-5 sm:px-6 lg:px-8">
+    <div className="mx-auto w-full max-w-7xl space-y-4 px-4 py-8 sm:px-6 lg:px-8">
       <ResultSummaryHero
         summary={result.summary}
         passingScore={passingScore}

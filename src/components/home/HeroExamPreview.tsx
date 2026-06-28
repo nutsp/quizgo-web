@@ -6,8 +6,6 @@ import { cn } from "@/lib/utils";
 
 const CHOICES = ["ก", "ข", "ค", "ง"] as const;
 const previewQuestionCount = 7;
-const ANSWERED_COUNT = 5;
-const PROGRESS_PERCENT = 71;
 
 const MINI_CARD_HEIGHT = "h-[210px] lg:h-[230px]";
 

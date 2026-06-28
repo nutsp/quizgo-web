@@ -1,5 +1,3 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { RankBadge } from "@/components/leaderboard/RankBadge";
 import { formatPercent, publicDisplayName } from "@/lib/format";
 
 interface PublicDisplayPreviewProps {
@@ -18,20 +16,20 @@ export function PublicDisplayPreview({
   const publicName = publicDisplayName(displayName, email);
 
   return (
-    <Card className="border-dashed border-primary/30 bg-primary/5">
-      <CardHeader>
-        <CardTitle className="text-base">ตัวอย่างชื่อที่จะแสดงบนกระดานอันดับ</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="flex flex-wrap items-center gap-3 rounded-xl border border-border bg-surface px-4 py-3">
-          <RankBadge rank={previewRank} />
-          <span className="font-medium text-foreground">{publicName}</span>
-          <span className="text-muted">{formatPercent(previewScore)}</span>
-        </div>
-        <p className="mt-3 text-xs text-muted">
-          ระบบจะไม่แสดงอีเมลเต็มบนกระดานอันดับ หากไม่ตั้งชื่อจะแสดงเป็นอีเมลที่ปิดบัง
-        </p>
-      </CardContent>
-    </Card>
+    <div className="mt-5 rounded-2xl bg-slate-50 p-4">
+      <p className="text-sm font-semibold text-slate-900">ตัวอย่างบนกระดานอันดับ</p>
+      <div className="mt-3 flex items-center gap-3 rounded-xl bg-white px-4 py-3 ring-1 ring-slate-200">
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-100 text-sm font-bold text-slate-600">
+          {previewRank}
+        </span>
+        <span className="min-w-0 flex-1 truncate font-semibold text-slate-950">{publicName}</span>
+        <span className="shrink-0 text-sm font-semibold text-teal-700">
+          {formatPercent(previewScore)}
+        </span>
+      </div>
+      <p className="mt-2 text-xs text-slate-500">
+        ระบบจะไม่แสดงอีเมลเต็มบนกระดานอันดับ
+      </p>
+    </div>
   );
 }

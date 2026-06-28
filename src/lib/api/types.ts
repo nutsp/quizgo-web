@@ -243,6 +243,22 @@ export interface WeakSubject {
   recommendation?: string;
 }
 
+export interface ScoreTrendPoint {
+  attempt_id: string;
+  submitted_at: string;
+  exam_set_title: string;
+  score_percent: number;
+  passed: boolean;
+}
+
+export interface SubjectPerformanceItem {
+  subject_code?: string;
+  subject_name: string;
+  score_percent: number;
+  total_attempts?: number;
+  total_questions?: number;
+}
+
 export interface MyResultsSummary {
   total_attempts: number;
   completed_exam_sets: number;
@@ -256,6 +272,8 @@ export interface MyResultsSummary {
   average_duration_seconds: number;
   most_practiced_exam_track?: ExamTrackRef;
   weak_subjects: WeakSubject[];
+  score_trend?: ScoreTrendPoint[];
+  subject_performance?: SubjectPerformanceItem[];
 }
 
 export interface ExamTrackResultSummary {

@@ -3,12 +3,21 @@ import { formatPercent } from "@/lib/format";
 
 interface ScoreBadgeProps {
   percent: number;
+  passed?: boolean;
   className?: string;
 }
 
-export function ScoreBadge({ percent, className }: ScoreBadgeProps) {
+export function ScoreBadge({ percent, passed, className }: ScoreBadgeProps) {
   const color =
-    percent >= 80 ? "text-success" : percent >= 60 ? "text-primary" : "text-warning";
+    passed === true
+      ? "text-green-700"
+      : passed === false
+        ? "text-orange-600"
+        : percent >= 80
+          ? "text-green-700"
+          : percent >= 60
+            ? "text-teal-700"
+            : "text-orange-600";
 
   return (
     <span className={cn("inline-flex items-center font-bold", color, className)}>

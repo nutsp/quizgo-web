@@ -2,10 +2,10 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { useParams } from "next/navigation";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import { AuthGuard } from "@/components/auth/AuthGuard";
+import { ExamCoverImage } from "@/components/exam/ExamCoverImage";
 import { getMyExamSetResultDetail } from "@/lib/api/endpoints";
 import { toUserFriendlyError } from "@/lib/api";
 import type { ExamSetResultDetail } from "@/lib/api/types";
@@ -76,15 +76,13 @@ function ExamSetResultDetailContent() {
       </Button>
 
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
-        <div className="relative h-32 w-full shrink-0 overflow-hidden rounded-xl bg-background sm:h-28 sm:w-44">
-          {set.cover_image_url ? (
-            <Image src={set.cover_image_url} alt={set.title} fill className="object-cover" />
-          ) : (
-            <div className="flex h-full items-center justify-center bg-primary/10 text-primary">
-              {set.code}
-            </div>
-          )}
-        </div>
+        <ExamCoverImage
+          src={set.cover_image_url}
+          alt={set.title}
+          title={set.title}
+          className="h-32 w-full shrink-0 rounded-xl sm:h-28 sm:w-44"
+          iconClassName="h-8 w-8"
+        />
         <div>
           <div className="flex flex-wrap items-center gap-2">
             <h1 className="text-2xl font-bold text-foreground">{set.title}</h1>
@@ -180,7 +178,7 @@ function ExamSetResultDetailContent() {
 export default function ExamSetResultPage() {
   return (
     <AuthGuard>
-      <div className="mx-auto max-w-3xl px-4 py-8 lg:px-8">
+      <div className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <ExamSetResultDetailContent />
       </div>
     </AuthGuard>

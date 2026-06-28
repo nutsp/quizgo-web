@@ -55,7 +55,6 @@ export default function HomePage() {
   const continueExam = home?.continue_attempt;
   const featuredSet = popularExamSets[0];
 
-  const heroSteps = ["ทำข้อสอบ", "ฝน OMR", "ส่งคำตอบ", "ดูผลวิเคราะห์"];
   const displayName = user?.display_name?.trim();
   const heroTitle = displayName
     ? `ยินดีต้อนรับ, ${displayName}`
