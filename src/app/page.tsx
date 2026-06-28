@@ -5,13 +5,11 @@ import Link from "next/link";
 import { AlertTriangle, BarChart3, BookOpen, Loader2 } from "lucide-react";
 import { ExamSetCard } from "@/components/exam/ExamSetCard";
 import { StartExamModal } from "@/components/exam/StartExamModal";
-import { MiniAnswerSheetPreview } from "@/components/MiniAnswerSheetPreview";
+import { HeroExamPreview } from "@/components/home/HeroExamPreview";
 import { ProgressCard } from "@/components/ProgressCard";
-import { SearchBar } from "@/components/SearchBar";
 import { StatCard } from "@/components/StatCard";
 import { Button } from "@/components/ui/button";
 import { BRAND } from "@/config/brand";
-import { quickFilters } from "@/data/exams";
 import { useAuth } from "@/hooks/useAuth";
 import { getHome } from "@/lib/api/endpoints";
 import { mapExamSetItemToExamSet } from "@/lib/api/mappers";
@@ -19,8 +17,7 @@ import type { ExamSet } from "@/lib/exam/format";
 import type { HomeResponse } from "@/lib/api/types";
 
 export default function HomePage() {
-  const { isAuthenticated, user, loading: authLoading } = useAuth();
-  const [activeChip, setActiveChip] = useState<string | null>(null);
+  const { isAuthenticated, loading: authLoading, user } = useAuth();
   const [home, setHome] = useState<HomeResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [startExamSet, setStartExamSet] = useState<ExamSet | null>(null);
@@ -58,13 +55,11 @@ export default function HomePage() {
   const continueExam = home?.continue_attempt;
   const featuredSet = popularExamSets[0];
 
-  const heroTitle = isAuthenticated && user
-    ? `ยินดีต้อนรับ, ${user.display_name}`
-    : "ซ้อมสอบให้พร้อมกับควิซโก";
-
-  const heroSubtitle = isAuthenticated && user
-    ? BRAND.description
-    : "ซ้อมสอบเสมือนจริงด้วยตัวจับเวลา กระดาษคำตอบ OMR ตรวจผลทันที และวิเคราะห์จุดอ่อนเพื่อพัฒนาคะแนนของคุณ";
+  const heroSteps = ["ทำข้อสอบ", "ฝน OMR", "ส่งคำตอบ", "ดูผลวิเคราะห์"];
+  const displayName = user?.display_name?.trim();
+  const heroTitle = displayName
+    ? `ยินดีต้อนรับ, ${displayName}`
+    : "ยินดีต้อนรับสู่ QuizGo";
 
   const handleStart = (examSet: ExamSet) => {
     setStartExamSet(examSet);
@@ -72,10 +67,10 @@ export default function HomePage() {
   };
 
   return (
-    <div className="mx-auto max-w-7xl space-y-10 px-4 py-8 lg:px-8 lg:py-12">
+    <div className="mx-auto max-w-7xl px-4 py-8 lg:px-8 lg:py-12">
       <section className="grid items-center gap-8 lg:grid-cols-2">
         <div className="space-y-6">
-          <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-1.5 text-xs font-medium text-primary">
+          <div className="inline-flex items-center gap-2 rounded-full bg-teal-50 px-4 py-1.5 text-xs font-medium text-teal-700">
             <BookOpen className="h-3.5 w-3.5" />
             {BRAND.tagline}
           </div>
@@ -83,41 +78,41 @@ export default function HomePage() {
             {heroTitle}
           </h1>
           <p className="max-w-lg text-base leading-relaxed text-muted md:text-lg">
-            {heroSubtitle}
+            {BRAND.description}
           </p>
           <div className="flex flex-wrap gap-3">
             {featuredSet ? (
               <Button size="lg" onClick={() => handleStart(featuredSet)}>
-                เริ่มซ้อมสอบ
+                ทำข้อสอบ
               </Button>
             ) : (
               <Button asChild size="lg">
-                <Link href="/exams/gpor-set-1">เริ่มซ้อมสอบ</Link>
+                <Link href="/exams/gpor-set-1">ทำข้อสอบ</Link>
               </Button>
             )}
             <Button asChild variant="outline" size="lg">
               <Link href="/exams">ดูคลังข้อสอบ</Link>
             </Button>
           </div>
+          {/* <div className="mt-6 flex flex-wrap gap-2">
+            {heroSteps.map((step, index) => (
+              <div
+                key={step}
+                className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/80 px-3 py-1.5 text-xs font-medium text-slate-600"
+              >
+                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-teal-50 text-[11px] font-bold text-teal-700">
+                  {index + 1}
+                </span>
+                {step}
+              </div>
+            ))}
+          </div> */}
         </div>
-        <div className="relative">
-          <div className="absolute -left-4 -top-4 h-24 w-24 rounded-full bg-primary/10 blur-2xl" />
-          <div className="absolute -bottom-4 -right-4 h-32 w-32 rounded-full bg-secondary/10 blur-2xl" />
-          <MiniAnswerSheetPreview />
-        </div>
-      </section>
-
-      <section>
-        <SearchBar
-          placeholder="ค้นหาข้อสอบ เช่น เสมือนจริง, งานสารบรรณ, ภาค ก"
-          chips={quickFilters}
-          activeChip={activeChip}
-          onChipClick={(chip) => setActiveChip(activeChip === chip ? null : chip)}
-        />
+        <HeroExamPreview />
       </section>
 
       {continueExam && (
-        <section>
+        <section className="mt-10">
           <ProgressCard
             title={continueExam.exam_set_title}
             completed={continueExam.answered_count}
@@ -129,7 +124,7 @@ export default function HomePage() {
       )}
 
       {progress && (
-        <section>
+        <section className="mt-10">
           <h2 className="mb-4 text-lg font-bold text-foreground">สรุปความก้าวหน้า</h2>
           <div className="grid gap-4 sm:grid-cols-3">
             <StatCard
@@ -153,7 +148,7 @@ export default function HomePage() {
         </section>
       )}
 
-      <section>
+      <section className="mt-10">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-lg font-bold text-foreground">ข้อสอบจำลองยอดนิยม</h2>
           <Button asChild variant="ghost" size="sm">

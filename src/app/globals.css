@@ -17,3 +17,28 @@
     text-wrap: balance;
   }
 }
+
+@keyframes hero-paper-scroll {
+  0% {
+    transform: translateY(0);
+  }
+  45% {
+    transform: translateY(-34%);
+  }
+  55% {
+    transform: translateY(-34%);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
+.hero-paper-scroll {
+  animation: hero-paper-scroll 10s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-paper-scroll {
+    animation: none;
+  }
+}

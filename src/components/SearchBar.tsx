@@ -6,6 +6,8 @@ import { cn } from "@/lib/utils";
 
 interface SearchBarProps {
   placeholder?: string;
+  title?: string;
+  subtitle?: string;
   className?: string;
   chips?: string[];
   onChipClick?: (chip: string) => void;
@@ -14,19 +16,36 @@ interface SearchBarProps {
 
 export function SearchBar({
   placeholder = "ค้นหา...",
+  title,
+  subtitle,
   className,
   chips,
   onChipClick,
   activeChip,
 }: SearchBarProps) {
   return (
-    <div className={cn("space-y-3", className)}>
+    <div className={cn("w-full", className)}>
+      {(title || subtitle) && (
+        <div className="mb-3">
+          {title && (
+            <h2 className="text-sm font-semibold text-slate-900">{title}</h2>
+          )}
+          {subtitle && (
+            <p className="mt-1 text-sm text-slate-500">{subtitle}</p>
+          )}
+        </div>
+      )}
+
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
-        <Input placeholder={placeholder} className="pl-10" />
+        <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+        <Input
+          placeholder={placeholder}
+          className="h-11 rounded-2xl border border-slate-200 bg-white pl-10 pr-4 text-sm shadow-none focus-visible:border-teal-500 focus-visible:ring-2 focus-visible:ring-teal-100"
+        />
       </div>
+
       {chips && chips.length > 0 && (
-        <div className="flex flex-wrap gap-2">
+        <div className="mt-3 flex flex-wrap gap-2">
           {chips.map((chip) => (
             <button
               key={chip}
@@ -35,8 +54,8 @@ export function SearchBar({
               className={cn(
                 "rounded-full border px-3 py-1 text-xs font-medium transition-colors",
                 activeChip === chip
-                  ? "border-primary bg-primary/10 text-primary"
-                  : "border-border bg-surface text-muted hover:border-primary/30 hover:text-primary"
+                  ? "border-teal-200 bg-teal-50 text-teal-700"
+                  : "border-slate-200 bg-slate-50 text-slate-600 hover:border-teal-200 hover:bg-teal-50 hover:text-teal-700"
               )}
             >
               {chip}
