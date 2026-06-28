@@ -1,9 +1,14 @@
-export type { ExamSet, ExamSetDifficulty, ExamSetAccessType, ExamSetMode } from "@/lib/exam/format";
+import type { AnswerSheetLayoutConfig } from "@/lib/exam/answerSheetLayout";
+import type { ExamSetAccess, ExamSetAccessType } from "@/lib/exam/format";
+
+export type { ExamSet, ExamSetDifficulty, ExamSetAccessType, ExamSetMode, ExamSetAccess } from "@/lib/exam/format";
+export type { AnswerSheetLayoutConfig } from "@/lib/exam/answerSheetLayout";
 
 export interface ApiErrorBody {
   error: {
     code: string;
     message: string;
+    details?: Record<string, unknown>;
   };
 }
 
@@ -51,14 +56,22 @@ export interface ExamSetItem {
   total_questions: number;
   passing_score: number;
   difficulty: "easy" | "medium" | "hard";
-  access_type: "free" | "premium";
+  access_type: "free" | "paid" | "premium" | "private";
+  allow_single_purchase?: boolean;
   price_amount: number;
   sale_price_amount?: number | null;
+  original_price_amount?: number | null;
   currency: string;
   mode: "practice" | "mock_exam";
   is_official: boolean;
   is_featured?: boolean;
+  is_popular?: boolean;
+  is_new?: boolean;
+  attempt_count?: number | null;
+  purchase_count?: number | null;
+  completed_count?: number | null;
   exam_track?: ExamTrackRef;
+  access?: ExamSetAccess;
   /** @deprecated use exam_track */
   exam_track_code?: string;
   /** @deprecated use exam_track */
@@ -129,6 +142,7 @@ export interface GetAttemptResponse {
     duration_minutes: number;
     total_questions: number;
     passing_score?: number;
+    answer_sheet_layout?: AnswerSheetLayoutConfig;
   };
   started_at: string;
   expires_at: string;
@@ -207,6 +221,7 @@ export interface ReviewQuestion {
   is_unanswered: boolean;
   explanation: string;
   subject: string;
+  tags?: { name: string; code: string }[];
 }
 
 export interface ReviewResponse {
@@ -442,4 +457,49 @@ export type UserProfile = {
 
 export type UpdateProfileInput = {
   display_name: string;
+};
+
+export type MyExamSummary = {
+  has_premium: boolean;
+  premium_expires_at?: string | null;
+  unlocked_exam_set_count: number;
+  private_exam_set_count: number;
+};
+
+export type MyExamAccessSource =
+  | "single_purchase"
+  | "private_grant"
+  | "premium"
+  | "granted";
+
+export type MyExamItem = {
+  id: string;
+  code: string;
+  title: string;
+  description?: string | null;
+  access_type: ExamSetAccessType;
+  access_source: MyExamAccessSource;
+  cover_image_url?: string | null;
+  total_questions: number;
+  duration_minutes: number;
+  difficulty?: string | null;
+  passing_score?: number | null;
+  exam_track?: {
+    id: string;
+    name: string;
+    code: string;
+  } | null;
+  entitlement?: {
+    id: string;
+    source: string;
+    starts_at: string;
+    expires_at?: string | null;
+    status: "active" | "expired" | "revoked" | "pending";
+  } | null;
+  latest_attempt?: {
+    attempt_id: string;
+    status: "in_progress" | "submitted" | "timeout";
+    score_percent?: number | null;
+    submitted_at?: string | null;
+  } | null;
 };

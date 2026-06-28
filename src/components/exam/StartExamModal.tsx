@@ -13,6 +13,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/useToast";
 import { ApiError, toUserFriendlyError } from "@/lib/api";
 import { startAttempt } from "@/lib/api/endpoints";
 import {
@@ -41,6 +42,7 @@ type StartExamModalProps = {
 export function StartExamModal({ examSet, open, onOpenChange }: StartExamModalProps) {
   const router = useRouter();
   const { isAuthenticated } = useAuth();
+  const { showToast } = useToast();
   const [confirmed, setConfirmed] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -57,6 +59,7 @@ export function StartExamModal({ examSet, open, onOpenChange }: StartExamModalPr
     if (!examSet) return;
 
     if (!isAuthenticated) {
+      showToast("กรุณาเข้าสู่ระบบก่อนเริ่มทำข้อสอบ", "error");
       router.push(`/login?redirect=${encodeURIComponent(`/exams/${examSet.code}`)}`);
       return;
     }
@@ -71,10 +74,35 @@ export function StartExamModal({ examSet, open, onOpenChange }: StartExamModalPr
       router.push(`/exams/${examSet.code}/take?attempt_id=${data.attempt_id}`);
     } catch (e) {
       if (e instanceof ApiError) {
-        if (e.status === 401) {
-          setError("กรุณาเข้าสู่ระบบก่อนเริ่มทำข้อสอบ");
+        if (e.status === 401 || e.code === "LOGIN_REQUIRED") {
+          showToast("กรุณาเข้าสู่ระบบก่อนเริ่มทำข้อสอบ", "error");
+          onOpenChange(false);
+          router.push(`/login?redirect=${encodeURIComponent(`/exams/${examSet.code}`)}`);
+        } else if (e.code === "ACCESS_REQUIRED_OR_PREMIUM") {
+          showToast(
+            "ชุดข้อสอบนี้สามารถปลดล็อกเฉพาะชุด หรือใช้งานผ่าน Premium ได้",
+            "error"
+          );
+          onOpenChange(false);
+          const unlockUrl =
+            (e.details?.unlock_url as string) ?? `/exams/${examSet.code}/unlock`;
+          router.push(unlockUrl);
         } else if (e.code === "PREMIUM_REQUIRED") {
-          setError("ชุดข้อสอบนี้เป็น Premium กรุณาซื้อแพ็กเกจก่อนเริ่มทำข้อสอบ");
+          showToast("ชุดข้อสอบนี้สำหรับสมาชิก Premium เท่านั้น", "error");
+          onOpenChange(false);
+          router.push("/pricing");
+        } else if (e.code === "ACCESS_REQUIRED") {
+          showToast("ชุดข้อสอบนี้ต้องปลดล็อกก่อนเริ่มทำข้อสอบ", "error");
+          onOpenChange(false);
+          const unlockUrl = (e.details?.unlock_url as string) ?? `/exams/${examSet.code}/unlock`;
+          router.push(unlockUrl);
+        } else if (e.code === "PRIVATE_EXAM_ACCESS_REQUIRED") {
+          showToast("ชุดข้อสอบนี้เปิดให้เฉพาะผู้ได้รับสิทธิ์เท่านั้น", "error");
+          onOpenChange(false);
+          router.push("/exams");
+        } else if (e.code === "EXAM_NOT_AVAILABLE") {
+          showToast("ชุดข้อสอบนี้ยังไม่พร้อมให้ใช้งาน", "error");
+          onOpenChange(false);
         } else {
           setError(toUserFriendlyError(e));
         }

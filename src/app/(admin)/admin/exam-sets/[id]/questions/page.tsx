@@ -12,11 +12,14 @@ import { BulkAddSummary } from "@/components/admin/exam-set-questions/BulkAddSum
 import { QuestionBankPanel } from "@/components/admin/exam-set-questions/QuestionBankPanel";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/useToast";
+import { useAdminListParams } from "@/hooks/useAdminListParams";
 import {
   adminExamSetsApi,
   adminSubjectsApi,
+  adminQuestionTagsApi,
   type AdminExamSet,
   type AdminSubject,
+  type AdminQuestionTag,
 } from "@/lib/api/admin/endpoints";
 import {
   adminExamSetQuestionsApi,
@@ -31,12 +34,20 @@ type Tab = "bank" | "assigned";
 
 export default function ExamSetQuestionsPage({ params }: { params: { id: string } }) {
   const { showToast } = useToast();
+  const { params: listParams, updateParams, searchKey } = useAdminListParams(
+    "subject_id",
+    "tag_id",
+    "difficulty",
+    "status",
+    "exclude_assigned"
+  );
   const [examSet, setExamSet] = useState<AdminExamSet | null>(null);
   const [examSetSummary, setExamSetSummary] = useState<ExamSetQuestionsSummary | null>(null);
   const [assigned, setAssigned] = useState<AssignedExamQuestion[]>([]);
   const [localAssigned, setLocalAssigned] = useState<AssignedExamQuestion[]>([]);
   const [bank, setBank] = useState<AdminQuestionListItem[]>([]);
   const [subjects, setSubjects] = useState<AdminSubject[]>([]);
+  const [tags, setTags] = useState<AdminQuestionTag[]>([]);
   const [loading, setLoading] = useState(true);
   const [bankLoading, setBankLoading] = useState(false);
   const [bulkAdding, setBulkAdding] = useState(false);
@@ -47,13 +58,12 @@ export default function ExamSetQuestionsPage({ params }: { params: { id: string 
   const [removeTarget, setRemoveTarget] = useState<string | null>(null);
   const [removing, setRemoving] = useState(false);
   const [activeTab, setActiveTab] = useState<Tab>("bank");
-  const [search, setSearch] = useState("");
-  const [subjectFilter, setSubjectFilter] = useState("");
-  const [difficultyFilter, setDifficultyFilter] = useState("");
-  const [statusFilter, setStatusFilter] = useState("published");
-  const [excludeAssigned, setExcludeAssigned] = useState(true);
-  const [page, setPage] = useState(1);
-  const [total, setTotal] = useState(0);
+  const [bankPagination, setBankPagination] = useState({
+    page: 1, limit: 20, total: 0, total_pages: 1, has_next: false, has_prev: false,
+  });
+
+  const excludeAssigned = listParams.exclude_assigned !== "false";
+  const statusFilter = listParams.status || "published";
 
   const dirty = useMemo(() => {
     if (assigned.length !== localAssigned.length) return true;
@@ -63,7 +73,10 @@ export default function ExamSetQuestionsPage({ params }: { params: { id: string 
   }, [assigned, localAssigned]);
 
   const loadAssigned = useCallback(async () => {
-    const data = await adminExamSetQuestionsApi.listAssignedQuestions(params.id);
+    const data = await adminExamSetQuestionsApi.listAssignedQuestions(params.id, {
+      page: 1,
+      limit: 100,
+    });
     setExamSetSummary(data.exam_set);
     setAssigned(data.items);
     setLocalAssigned(data.items);
@@ -74,54 +87,48 @@ export default function ExamSetQuestionsPage({ params }: { params: { id: string 
   const loadBank = useCallback(async () => {
     setBankLoading(true);
     try {
-      const p: Record<string, string> = {
-        page: String(page),
-        limit: "20",
+      const data = await adminExamSetQuestionsApi.getAvailableQuestions(params.id, {
+        page: listParams.page,
+        limit: listParams.limit,
         exclude_assigned: excludeAssigned ? "true" : "false",
-      };
-      if (search) p.q = search;
-      if (subjectFilter) p.subject_id = subjectFilter;
-      if (difficultyFilter) p.difficulty = difficultyFilter;
-      if (statusFilter) p.status = statusFilter;
-      const data = await adminExamSetQuestionsApi.getAvailableQuestions(params.id, p);
+        q: listParams.q || undefined,
+        subject_id: listParams.subject_id || undefined,
+        tag_id: listParams.tag_id || undefined,
+        difficulty: listParams.difficulty || undefined,
+        status: statusFilter || undefined,
+      });
       setBank(data.items);
-      setTotal(data.pagination.total);
+      setBankPagination(data.pagination);
     } catch (e) {
       showToast(toUserFriendlyError(e), "error");
     } finally {
       setBankLoading(false);
     }
-  }, [
-    params.id,
-    page,
-    search,
-    subjectFilter,
-    difficultyFilter,
-    statusFilter,
-    excludeAssigned,
-    showToast,
-  ]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [params.id, searchKey, showToast]);
 
   useEffect(() => {
     Promise.all([
       adminExamSetsApi.get(params.id),
       adminExamSetQuestionsApi.listAssignedQuestions(params.id),
       adminSubjectsApi.list({ limit: "100" }),
+      adminQuestionTagsApi.list({ limit: "100", is_active: "true" }),
     ])
-      .then(([set, assignedData, subs]) => {
+      .then(([set, assignedData, subs, tagData]) => {
         setExamSet(set);
         setExamSetSummary(assignedData.exam_set);
         setAssigned(assignedData.items);
         setLocalAssigned(assignedData.items);
         setIsLocked(assignedData.is_locked_by_attempts);
         setSubjects(subs.items);
+        setTags(tagData.items);
       })
       .catch((e) => showToast(toUserFriendlyError(e), "error"))
       .finally(() => setLoading(false));
   }, [params.id, showToast]);
 
   useEffect(() => {
-    if (!loading) loadBank();
+    if (!loading) void loadBank();
   }, [loading, loadBank]);
 
   const handleToggleSelect = (id: string) => {
@@ -324,39 +331,34 @@ export default function ExamSetQuestionsPage({ params }: { params: { id: string 
           <QuestionBankPanel
             questions={bank}
             subjects={subjects}
+            tags={tags}
             loading={bankLoading}
-            total={total}
-            page={page}
+            total={bankPagination.total}
+            page={bankPagination.page}
+            limit={bankPagination.limit}
+            totalPages={bankPagination.total_pages}
+            hasNext={bankPagination.has_next}
+            hasPrev={bankPagination.has_prev}
             selectedIds={selectedIds}
             disabled={isLocked}
             bulkAdding={bulkAdding}
-            search={search}
-            subjectFilter={subjectFilter}
-            difficultyFilter={difficultyFilter}
+            search={listParams.q}
+            subjectFilter={listParams.subject_id}
+            tagFilter={listParams.tag_id}
+            difficultyFilter={listParams.difficulty}
             statusFilter={statusFilter}
             excludeAssigned={excludeAssigned}
-            onSearchChange={(v) => {
-              setSearch(v);
-              setPage(1);
-            }}
-            onSubjectFilterChange={(v) => {
-              setSubjectFilter(v);
-              setPage(1);
-            }}
-            onDifficultyFilterChange={(v) => {
-              setDifficultyFilter(v);
-              setPage(1);
-            }}
-            onStatusFilterChange={(v) => {
-              setStatusFilter(v);
-              setPage(1);
-            }}
-            onExcludeAssignedChange={setExcludeAssigned}
+            onSearchChange={(v) => updateParams({ q: v }, { resetPage: true })}
+            onSubjectFilterChange={(v) => updateParams({ subject_id: v }, { resetPage: true })}
+            onTagFilterChange={(v) => updateParams({ tag_id: v }, { resetPage: true })}
+            onDifficultyFilterChange={(v) => updateParams({ difficulty: v }, { resetPage: true })}
+            onStatusFilterChange={(v) => updateParams({ status: v === "published" ? "" : v }, { resetPage: true })}
+            onExcludeAssignedChange={(v) => updateParams({ exclude_assigned: v ? "true" : "false" }, { resetPage: true })}
             onToggleSelect={handleToggleSelect}
             onSelectAllPage={handleSelectAllPage}
             onClearSelection={() => setSelectedIds(new Set())}
             onBulkAdd={handleBulkAdd}
-            onPageChange={setPage}
+            onPageChange={(page) => updateParams({ page })}
           />
         </div>
         <div className={activeTab === "bank" ? "hidden lg:block" : ""}>

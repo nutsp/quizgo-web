@@ -10,6 +10,7 @@ import { ProgressCard } from "@/components/ProgressCard";
 import { SearchBar } from "@/components/SearchBar";
 import { StatCard } from "@/components/StatCard";
 import { Button } from "@/components/ui/button";
+import { BRAND } from "@/config/brand";
 import { quickFilters } from "@/data/exams";
 import { useAuth } from "@/hooks/useAuth";
 import { getHome } from "@/lib/api/endpoints";
@@ -49,14 +50,21 @@ export default function HomePage() {
   }, [authLoading, isAuthenticated]);
 
   const popularExamSets =
-    home?.popular_exam_sets.map(mapExamSetItemToExamSet) ?? [];
+    home?.popular_exam_sets.map((item) => ({
+      ...mapExamSetItemToExamSet(item),
+      is_popular: true,
+    })) ?? [];
   const progress = home?.my_progress_summary;
   const continueExam = home?.continue_attempt;
   const featuredSet = popularExamSets[0];
 
   const heroTitle = isAuthenticated && user
     ? `ยินดีต้อนรับ, ${user.display_name}`
-    : "เริ่มฝึกสอบฟรีวันนี้";
+    : "ซ้อมสอบให้พร้อมกับควิซโก";
+
+  const heroSubtitle = isAuthenticated && user
+    ? BRAND.description
+    : "ซ้อมสอบเสมือนจริงด้วยตัวจับเวลา กระดาษคำตอบ OMR ตรวจผลทันที และวิเคราะห์จุดอ่อนเพื่อพัฒนาคะแนนของคุณ";
 
   const handleStart = (examSet: ExamSet) => {
     setStartExamSet(examSet);
@@ -69,28 +77,22 @@ export default function HomePage() {
         <div className="space-y-6">
           <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-1.5 text-xs font-medium text-primary">
             <BookOpen className="h-3.5 w-3.5" />
-            สนามสอบเสมือนจริง
+            {BRAND.tagline}
           </div>
           <h1 className="text-3xl font-bold leading-tight text-foreground md:text-4xl lg:text-5xl">
             {heroTitle}
-            {!isAuthenticated && (
-              <>
-                <br />
-                <span className="text-primary">จำลองสอบเสมือนจริงเหมือนสนามจริง</span>
-              </>
-            )}
           </h1>
           <p className="max-w-lg text-base leading-relaxed text-muted md:text-lg">
-            ฝนคำตอบ จับเวลา ตรวจคะแนน และวิเคราะห์จุดอ่อน เพื่อเตรียมพร้อมก่อนสอบจริง
+            {heroSubtitle}
           </p>
           <div className="flex flex-wrap gap-3">
             {featuredSet ? (
               <Button size="lg" onClick={() => handleStart(featuredSet)}>
-                เริ่มทำข้อสอบฟรี
+                เริ่มซ้อมสอบ
               </Button>
             ) : (
               <Button asChild size="lg">
-                <Link href="/exams/gpor-set-1">เริ่มทำข้อสอบฟรี</Link>
+                <Link href="/exams/gpor-set-1">เริ่มซ้อมสอบ</Link>
               </Button>
             )}
             <Button asChild variant="outline" size="lg">
@@ -163,9 +165,9 @@ export default function HomePage() {
             <Loader2 className="h-6 w-6 animate-spin" />
           </div>
         ) : (
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            <div className="grid items-stretch gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {popularExamSets.map((examSet) => (
-              <ExamSetCard key={examSet.code} examSet={examSet} onStart={handleStart} />
+              <ExamSetCard key={examSet.code} examSet={examSet} />
             ))}
           </div>
         )}

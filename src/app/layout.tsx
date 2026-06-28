@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import { Noto_Sans_Thai } from "next/font/google";
+import { Footer } from "@/components/layout/Footer";
 import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
 import { Navbar } from "@/components/layout/Navbar";
+import { BRAND } from "@/config/brand";
 import { AuthProvider } from "@/hooks/useAuth";
 import { ToastProvider } from "@/hooks/useToast";
 import "./globals.css";
@@ -13,9 +15,23 @@ const notoSansThai = Noto_Sans_Thai({
 });
 
 export const metadata: Metadata = {
-  title: "สนามสอบเสมือนจริง | จำลองสอบเสมือนจริงเหมือนสนามจริง",
+  title: {
+    default: BRAND.name,
+    template: `%s | ${BRAND.name}`,
+  },
   description:
-    "แพลตฟอร์มจำลองสอบเสมือนจริง ฝนคำตอบ จับเวลา ตรวจคะแนน และวิเคราะห์ผลสอบ",
+    "ซ้อมสอบเสมือนจริง ก่อนลงสนามจริง พร้อมจับเวลา กระดาษคำตอบ OMR ตรวจผล และวิเคราะห์จุดอ่อน",
+  applicationName: BRAND.name,
+  openGraph: {
+    title: BRAND.name,
+    description:
+      "ซ้อมสอบเสมือนจริง ก่อนลงสนามจริง พร้อมจับเวลา กระดาษคำตอบ OMR ตรวจผล และวิเคราะห์จุดอ่อน",
+    siteName: BRAND.name,
+  },
+  icons: {
+    icon: [{ url: BRAND.icon, type: "image/svg+xml" }],
+    apple: BRAND.appleTouchIcon,
+  },
 };
 
 export default function RootLayout({
@@ -30,6 +46,7 @@ export default function RootLayout({
           <ToastProvider>
             <Navbar />
             <main className="min-h-screen pb-20 md:pb-0">{children}</main>
+            <Footer />
             <MobileBottomNav />
           </ToastProvider>
         </AuthProvider>

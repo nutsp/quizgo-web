@@ -38,11 +38,11 @@ export function getHome(auth = true) {
 
 export function listExamSets(params?: Record<string, string>) {
   const query = params ? `?${new URLSearchParams(params)}` : "";
-  return apiGet<PaginatedExamSets>(`/exam-sets${query}`);
+  return apiGet<PaginatedExamSets>(`/exam-sets${query}`, true, true);
 }
 
 export function getExamSet(examSetCode: string) {
-  return apiGet<ExamSetItem>(`/exam-sets/${examSetCode}`);
+  return apiGet<ExamSetItem>(`/exam-sets/${examSetCode}`, true, true);
 }
 
 export function startAttempt(examSetCode: string) {

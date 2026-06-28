@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256" role="img" aria-labelledby="title desc">
+  <title id="title">พร้อมสอบ icon</title>
+  <desc id="desc">Standalone exam readiness icon with a shield, exam paper, OMR bubbles, and check mark.</desc>
+  <rect width="256" height="256" rx="56" fill="#FFFFFF"/>
+  <g transform="translate(12 6) scale(.9)">
+  <path d="M128 16c66 0 114 18 114 18v94c0 74-47 117-114 140C61 245 14 202 14 128V34s48-18 114-18Z" fill="#0F766E"/>
+  <path d="M128 40c46 0 84 10 84 10v79c0 53-31 86-84 107-53-21-84-54-84-107V50s38-10 84-10Z" fill="#115E59" opacity=".32"/>
+  <rect x="75" y="64" width="106" height="139" rx="18" fill="#F8FAFC"/>
+  <path d="M150 64h13l18 18v13h-31V64Z" fill="#DBEAFE"/>
+  <path d="M150 64v31h31" fill="none" stroke="#2563EB" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="98" cy="105" r="9" fill="#0F766E"/>
+  <circle cx="98" cy="138" r="9" fill="#2563EB"/>
+  <circle cx="98" cy="171" r="9" fill="#0F766E" opacity=".9"/>
+  <path d="M119 105h35M119 138h29M119 171h24" fill="none" stroke="#94A3B8" stroke-width="8" stroke-linecap="round"/>
+  <path d="M79 53H59a18 18 0 0 0-18 18v20M195 53h20a18 18 0 0 1 18 18v20M59 211H41v-20M195 211h20v-20" fill="none" stroke="#F59E0B" stroke-width="10" stroke-linecap="round"/>
+  <path d="M96 175l24 24 52-62" fill="none" stroke="#F59E0B" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+</svg>

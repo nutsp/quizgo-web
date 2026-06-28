@@ -159,7 +159,9 @@ export type AdminExamSet = {
   passing_score: number;
   difficulty: string;
   access_type: string;
+  allow_single_purchase: boolean;
   price_amount: number;
+  original_price_amount?: number | null;
   currency: string;
   sale_price_amount?: number | null;
   mode: string;
@@ -186,7 +188,9 @@ export type ExamSetInput = {
   passing_score: number;
   difficulty: string;
   access_type: string;
+  allow_single_purchase: boolean;
   price_amount: number;
+  original_price_amount?: number | null;
   sale_price_amount?: number | null;
   currency?: string;
   mode: string;

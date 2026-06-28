@@ -141,7 +141,7 @@ export default function ExamSetPreviewPage({ params }: { params: { id: string } 
     exam_track: examSet.exam_track,
   };
   const price = formatExamPrice(examForPrice);
-  const trackName = examSet.exam_track?.name ?? "สนามสอบเสมือนจริง";
+  const trackName = examSet.exam_track?.name ?? "ไม่ระบุสายการสอบ";
 
   return (
     <div>

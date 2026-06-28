@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { AdminGuard } from "@/components/admin/AdminGuard";
-import { AdminSidebar } from "@/components/admin/AdminSidebar";
+import { AdminSidebar } from "@/components/admin/layout/AdminSidebar";
 import { AdminTopbar } from "@/components/admin/AdminTopbar";
 import { ToastProvider } from "@/hooks/useToast";
 

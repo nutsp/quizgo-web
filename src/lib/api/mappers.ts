@@ -19,13 +19,21 @@ export function mapExamSetItemToExamSet(item: ExamSetItem): ExamSet {
     passing_score: item.passing_score,
     difficulty: item.difficulty,
     access_type: item.access_type,
+    allow_single_purchase: item.allow_single_purchase ?? item.access_type === "paid",
     price_amount: item.price_amount ?? 0,
     sale_price_amount: item.sale_price_amount,
+    original_price_amount: item.original_price_amount,
     currency: item.currency ?? "THB",
     mode: item.mode,
     is_official: item.is_official ?? false,
     is_featured: item.is_featured,
+    is_popular: item.is_popular,
+    is_new: item.is_new,
+    attempt_count: item.attempt_count,
+    purchase_count: item.purchase_count,
+    completed_count: item.completed_count,
     exam_track: track,
+    access: item.access,
   };
 }
 

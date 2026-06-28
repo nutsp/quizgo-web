@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BookOpen, ClipboardList, Home, Target, User } from "lucide-react";
+import { BookOpen, ClipboardList, Home, ShieldCheck, Target, User } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
 
@@ -16,9 +16,9 @@ const guestTabs = [
 const authTabs = [
   { href: "/", label: "หน้าแรก", icon: Home },
   { href: "/exams", label: "ข้อสอบ", icon: BookOpen },
-  { href: "#", label: "แผนฝึก", icon: Target },
+  { href: "/my-exams", label: "ของฉัน", icon: ShieldCheck },
   { href: "/my-results", label: "ผลสอบ", icon: ClipboardList },
-  { href: "#", label: "โปรไฟล์", icon: User },
+  { href: "/profile", label: "โปรไฟล์", icon: User },
 ];
 
 export function MobileBottomNav() {
@@ -46,7 +46,11 @@ export function MobileBottomNav() {
               ? pathname === "/"
               : tab.href === "/my-results"
                 ? pathname.startsWith("/my-results")
-                : pathname.startsWith(tab.href) && tab.href !== "#";
+                : tab.href === "/my-exams"
+                  ? pathname.startsWith("/my-exams")
+                  : tab.href === "/profile"
+                    ? pathname === "/profile" || pathname.startsWith("/me/profile")
+                    : pathname.startsWith(tab.href) && tab.href !== "#";
 
           return (
             <Link

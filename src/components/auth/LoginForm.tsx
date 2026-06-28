@@ -7,6 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { BrandLogo } from "@/components/brand/BrandLogo";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -71,11 +72,12 @@ export function LoginForm() {
 
   return (
     <Card className="border-border shadow-soft">
-      <CardHeader className="space-y-1">
-        <CardTitle className="text-2xl">เข้าสู่ระบบ</CardTitle>
-        <CardDescription>
-          เข้าสู่ระบบเพื่อเริ่มฝึกสอบและบันทึกผลคะแนนของคุณ
-        </CardDescription>
+      <CardHeader className="space-y-3">
+        <BrandLogo variant="text" size="sm" />
+        <div className="space-y-1">
+          <CardTitle className="text-2xl">เข้าสู่ระบบควิซโก</CardTitle>
+          <CardDescription>ซ้อมสอบเสมือนจริง ก่อนลงสนามจริง</CardDescription>
+        </div>
       </CardHeader>
       <CardContent>
         {registered && (

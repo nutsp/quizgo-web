@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { ChevronLeft, ChevronRight, Loader2, SlidersHorizontal, X } from "lucide-react";
 import { ExamSetCard } from "@/components/exam/ExamSetCard";
-import { StartExamModal } from "@/components/exam/StartExamModal";
 import { FilterSidebar } from "@/components/FilterSidebar";
 import { SearchBar } from "@/components/SearchBar";
 import { Button } from "@/components/ui/button";
@@ -26,9 +25,6 @@ export default function ExamLibraryPage() {
   const [examSets, setExamSets] = useState<ExamSet[]>([]);
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
-  const [startExamSet, setStartExamSet] = useState<ExamSet | null>(null);
-  const [modalOpen, setModalOpen] = useState(false);
-
   useEffect(() => {
     let cancelled = false;
 
@@ -55,11 +51,6 @@ export default function ExamLibraryPage() {
       cancelled = true;
     };
   }, [currentPage]);
-
-  const handleStart = (examSet: ExamSet) => {
-    setStartExamSet(examSet);
-    setModalOpen(true);
-  };
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 lg:px-8">
@@ -112,9 +103,9 @@ export default function ExamLibraryPage() {
               <Loader2 className="h-8 w-8 animate-spin" />
             </div>
           ) : (
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid items-stretch gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {examSets.map((examSet) => (
-                <ExamSetCard key={examSet.code} examSet={examSet} onStart={handleStart} />
+                <ExamSetCard key={examSet.code} examSet={examSet} />
               ))}
             </div>
           )}
@@ -171,11 +162,6 @@ export default function ExamLibraryPage() {
         </div>
       )}
 
-      <StartExamModal
-        examSet={startExamSet}
-        open={modalOpen}
-        onOpenChange={setModalOpen}
-      />
     </div>
   );
 }

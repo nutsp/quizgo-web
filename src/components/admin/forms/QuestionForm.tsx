@@ -15,7 +15,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import type { AdminSubject, QuestionInput } from "@/lib/api/admin/endpoints";
+import type { AdminSubject, QuestionInput, AdminQuestionTag } from "@/lib/api/admin/endpoints";
+import { QuestionTagMultiSelect } from "@/components/admin/questions/QuestionTagMultiSelect";
 
 const choiceSchema = z.object({
   choice_key: z.string(),
@@ -31,6 +32,7 @@ const schema = z
     difficulty: z.enum(["easy", "medium", "hard"]),
     explanation: z.string().optional(),
     status: z.enum(["draft", "published", "archived"]),
+    tag_ids: z.array(z.string()).optional(),
     choices: z.array(choiceSchema).length(4),
   })
   .refine((d) => d.choices.filter((c) => c.is_correct).length === 1, {
@@ -49,6 +51,7 @@ const DEFAULT_CHOICES = [
 
 type QuestionFormProps = {
   subjects: AdminSubject[];
+  tags?: AdminQuestionTag[];
   defaultValues?: Partial<FormValues>;
   onSubmit: (data: QuestionInput) => Promise<void>;
   submitLabel?: string;
@@ -56,6 +59,7 @@ type QuestionFormProps = {
 
 export function QuestionForm({
   subjects,
+  tags = [],
   defaultValues,
   onSubmit,
   submitLabel = "บันทึก",
@@ -74,6 +78,7 @@ export function QuestionForm({
       difficulty: "medium",
       explanation: "",
       status: "draft",
+      tag_ids: [],
       choices: DEFAULT_CHOICES,
       ...defaultValues,
     },
@@ -89,7 +94,10 @@ export function QuestionForm({
   return (
     <form
       onSubmit={handleSubmit(async (values) => {
-        await onSubmit(values);
+        await onSubmit({
+          ...values,
+          tag_ids: values.tag_ids ?? [],
+        });
       })}
       className="mx-auto max-w-3xl space-y-5 rounded-xl border border-border bg-surface p-6"
     >
@@ -105,6 +113,13 @@ export function QuestionForm({
         </Select>
         {errors.subject_id && <p className="text-sm text-danger">{errors.subject_id.message}</p>}
       </div>
+      {tags.length > 0 && (
+        <QuestionTagMultiSelect
+          tags={tags}
+          value={watch("tag_ids") ?? []}
+          onChange={(ids) => setValue("tag_ids", ids)}
+        />
+      )}
       <div className="space-y-2">
         <Label htmlFor="question_text">คำถาม *</Label>
         <Textarea id="question_text" rows={4} {...register("question_text")} />

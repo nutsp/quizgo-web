@@ -10,13 +10,15 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import type { AdminSubject } from "@/lib/api/admin/endpoints";
+import type { AdminSubject, AdminQuestionTag } from "@/lib/api/admin/endpoints";
 
 type QuestionFiltersProps = {
   search: string;
   onSearchChange: (value: string) => void;
   subjectFilter: string;
   onSubjectFilterChange: (value: string) => void;
+  tagFilter: string;
+  onTagFilterChange: (value: string) => void;
   difficultyFilter: string;
   onDifficultyFilterChange: (value: string) => void;
   statusFilter: string;
@@ -24,6 +26,7 @@ type QuestionFiltersProps = {
   excludeAssigned: boolean;
   onExcludeAssignedChange: (value: boolean) => void;
   subjects: AdminSubject[];
+  tags: AdminQuestionTag[];
 };
 
 export function QuestionFilters({
@@ -31,6 +34,8 @@ export function QuestionFilters({
   onSearchChange,
   subjectFilter,
   onSubjectFilterChange,
+  tagFilter,
+  onTagFilterChange,
   difficultyFilter,
   onDifficultyFilterChange,
   statusFilter,
@@ -38,6 +43,7 @@ export function QuestionFilters({
   excludeAssigned,
   onExcludeAssignedChange,
   subjects,
+  tags,
 }: QuestionFiltersProps) {
   return (
     <div className="space-y-3">
@@ -56,6 +62,19 @@ export function QuestionFilters({
             {subjects.map((s) => (
               <SelectItem key={s.id} value={s.id}>
                 {s.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select value={tagFilter || "all"} onValueChange={(v) => onTagFilterChange(v === "all" ? "" : v)}>
+          <SelectTrigger className="w-full min-w-[8rem] flex-1 sm:w-36">
+            <SelectValue placeholder="กลุ่มคำถาม" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">ทุกกลุ่ม</SelectItem>
+            {tags.map((t) => (
+              <SelectItem key={t.id} value={t.id}>
+                {t.name}
               </SelectItem>
             ))}
           </SelectContent>

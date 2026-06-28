@@ -14,6 +14,7 @@ import {
   type AdminExamTrack,
 } from "@/lib/api/admin/endpoints";
 import { toUserFriendlyError } from "@/lib/api";
+import { normalizeLayoutConfig } from "@/lib/exam/answerSheetLayout";
 
 export default function EditExamSetPage({ params }: { params: { id: string } }) {
   const router = useRouter();
@@ -54,14 +55,17 @@ export default function EditExamSetPage({ params }: { params: { id: string } }) 
             total_questions: set.total_questions,
             passing_score: set.passing_score,
             difficulty: set.difficulty as "easy" | "medium" | "hard",
-            access_type: set.access_type as "free" | "premium",
+            access_type: set.access_type as "free" | "paid" | "premium" | "private",
+            allow_single_purchase: set.allow_single_purchase ?? set.access_type === "paid",
             price_amount: set.price_amount,
+            original_price_amount: set.original_price_amount ?? undefined,
             sale_price_amount: set.sale_price_amount ?? undefined,
             currency: set.currency,
             mode: set.mode as "practice" | "mock_exam",
             is_official: set.is_official,
             is_featured: set.is_featured,
             is_active: set.is_active,
+            answer_sheet_layout: normalizeLayoutConfig(set.answer_sheet_layout),
           }}
           onSubmit={async (data) => {
             try {

@@ -14,7 +14,9 @@ const statusLabels: Record<string, string> = {
   medium: "ปานกลาง",
   hard: "ยาก",
   free: "ฟรี",
+  paid: "ซื้อรายชุด",
   premium: "Premium",
+  private: "เฉพาะผู้ได้รับสิทธิ์",
   practice: "ฝึกหัด",
   mock_exam: "จำลองสอบ",
 };
@@ -40,6 +42,8 @@ export function AdminStatusBadge({ active, status, className }: AdminStatusBadge
     published: "bg-success/10 text-success",
     archived: "bg-slate-100 text-slate-600",
     premium: "bg-accent/10 text-accent",
+    paid: "bg-blue-100 text-blue-800",
+    private: "bg-violet-100 text-violet-800",
   };
 
   return (

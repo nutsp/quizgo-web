@@ -4,11 +4,13 @@ import type { ApiErrorBody } from "./types";
 export class ApiError extends Error {
   code: string;
   status: number;
+  details?: Record<string, unknown>;
 
-  constructor(code: string, message: string, status: number) {
+  constructor(code: string, message: string, status: number, details?: Record<string, unknown>) {
     super(message);
     this.code = code;
     this.status = status;
+    this.details = details;
   }
 }
 
@@ -37,6 +39,9 @@ export function toUserFriendlyError(error: unknown): string {
   if (error instanceof ApiError) {
     if (error.code === "INVALID_CREDENTIALS") {
       return "อีเมลหรือรหัสผ่านไม่ถูกต้อง";
+    }
+    if (error.code === "ACCOUNT_SUSPENDED") {
+      return "บัญชีนี้ถูกระงับการใช้งาน กรุณาติดต่อผู้ดูแลระบบ";
     }
     if (error.status === 401) {
       return "กรุณาเข้าสู่ระบบก่อนใช้งาน";
@@ -91,7 +96,8 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
     const apiError = new ApiError(
       err?.error?.code ?? "UNKNOWN",
       err?.error?.message ?? "เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง",
-      res.status
+      res.status,
+      err?.error?.details as Record<string, unknown> | undefined
     );
 
     if (res.status === 401 && auth && !silent401) {
@@ -119,6 +125,14 @@ export function apiPost<T>(path: string, body?: unknown, auth = false) {
 export function apiPut<T>(path: string, body?: unknown, auth = true) {
   return request<T>(path, {
     method: "PUT",
+    auth,
+    body: body !== undefined ? JSON.stringify(body) : undefined,
+  });
+}
+
+export function apiPatch<T>(path: string, body?: unknown, auth = true) {
+  return request<T>(path, {
+    method: "PATCH",
     auth,
     body: body !== undefined ? JSON.stringify(body) : undefined,
   });
@@ -157,7 +171,8 @@ export async function apiPostFormData<T>(path: string, formData: FormData, auth 
     const apiError = new ApiError(
       err?.error?.code ?? "UNKNOWN",
       err?.error?.message ?? "เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง",
-      res.status
+      res.status,
+      err?.error?.details as Record<string, unknown> | undefined
     );
     if (res.status === 401 && auth) {
       redirectToLogin();

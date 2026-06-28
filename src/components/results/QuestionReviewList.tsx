@@ -98,6 +98,11 @@ function QuestionReviewCard({ question }: QuestionReviewCardProps) {
                 {question.subject}
               </Badge>
             )}
+            {(question.tags ?? []).map((tag) => (
+              <Badge key={tag.code} variant="secondary" className="bg-slate-100 font-normal text-slate-700">
+                {tag.name}
+              </Badge>
+            ))}
           </div>
           {getStatusBadge(question)}
         </div>

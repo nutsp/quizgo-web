@@ -1,29 +1,38 @@
 "use client";
 
 import { Loader2 } from "lucide-react";
+import { AdminPagination } from "@/components/admin/common/AdminPagination";
 import { AdminStatusBadge } from "@/components/admin/AdminStatusBadge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import type { AdminQuestionListItem } from "@/lib/api/admin/exam-set-questions";
 import { QuestionFilters } from "./QuestionFilters";
-import type { AdminSubject } from "@/lib/api/admin/endpoints";
+import type { AdminSubject, AdminQuestionTag } from "@/lib/api/admin/endpoints";
+import { QuestionTagBadge } from "@/components/admin/question-tags/QuestionTagBadge";
 
 type QuestionBankPanelProps = {
   questions: AdminQuestionListItem[];
   subjects: AdminSubject[];
+  tags: AdminQuestionTag[];
   loading: boolean;
   total: number;
   page: number;
+  limit: number;
+  totalPages: number;
+  hasNext: boolean;
+  hasPrev: boolean;
   selectedIds: Set<string>;
   disabled: boolean;
   bulkAdding: boolean;
   search: string;
   subjectFilter: string;
+  tagFilter: string;
   difficultyFilter: string;
   statusFilter: string;
   excludeAssigned: boolean;
   onSearchChange: (value: string) => void;
   onSubjectFilterChange: (value: string) => void;
+  onTagFilterChange: (value: string) => void;
   onDifficultyFilterChange: (value: string) => void;
   onStatusFilterChange: (value: string) => void;
   onExcludeAssignedChange: (value: boolean) => void;
@@ -43,19 +52,26 @@ function previewText(q: AdminQuestionListItem): string {
 export function QuestionBankPanel({
   questions,
   subjects,
+  tags,
   loading,
   total,
   page,
+  limit,
+  totalPages,
+  hasNext,
+  hasPrev,
   selectedIds,
   disabled,
   bulkAdding,
   search,
   subjectFilter,
+  tagFilter,
   difficultyFilter,
   statusFilter,
   excludeAssigned,
   onSearchChange,
   onSubjectFilterChange,
+  onTagFilterChange,
   onDifficultyFilterChange,
   onStatusFilterChange,
   onExcludeAssignedChange,
@@ -67,7 +83,6 @@ export function QuestionBankPanel({
 }: QuestionBankPanelProps) {
   const allPageSelected =
     questions.length > 0 && questions.every((q) => selectedIds.has(q.id) || q.already_assigned);
-  const totalPages = Math.max(1, Math.ceil(total / 20));
 
   return (
     <section className="flex h-full flex-col rounded-xl border border-border bg-surface p-4">
@@ -77,6 +92,8 @@ export function QuestionBankPanel({
         onSearchChange={onSearchChange}
         subjectFilter={subjectFilter}
         onSubjectFilterChange={onSubjectFilterChange}
+        tagFilter={tagFilter}
+        onTagFilterChange={onTagFilterChange}
         difficultyFilter={difficultyFilter}
         onDifficultyFilterChange={onDifficultyFilterChange}
         statusFilter={statusFilter}
@@ -84,6 +101,7 @@ export function QuestionBankPanel({
         excludeAssigned={excludeAssigned}
         onExcludeAssignedChange={onExcludeAssignedChange}
         subjects={subjects}
+        tags={tags}
       />
 
       <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-sm">
@@ -143,6 +161,9 @@ export function QuestionBankPanel({
                       )}
                       <AdminStatusBadge status={q.difficulty} />
                       <AdminStatusBadge status={q.status} />
+                      {(q.tags ?? []).map((t) => (
+                        <QuestionTagBadge key={t.id} name={t.name} color={t.color} className="text-xs" />
+                      ))}
                       {isAssigned && (
                         <span className="text-xs text-muted">อยู่ในชุดแล้ว</span>
                       )}
@@ -155,29 +176,17 @@ export function QuestionBankPanel({
         )}
       </div>
 
-      {totalPages > 1 && (
-        <div className="mt-3 flex items-center justify-between border-t border-border pt-3 text-sm">
-          <span className="text-muted">
-            หน้า {page} / {totalPages} ({total} ข้อ)
-          </span>
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={page <= 1 || loading}
-              onClick={() => onPageChange(page - 1)}
-            >
-              ก่อนหน้า
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={page >= totalPages || loading}
-              onClick={() => onPageChange(page + 1)}
-            >
-              ถัดไป
-            </Button>
-          </div>
+      {total > 0 && (
+        <div className="mt-3 border-t border-border pt-3">
+          <AdminPagination
+            page={page}
+            limit={limit}
+            total={total}
+            totalPages={totalPages}
+            hasNext={hasNext}
+            hasPrev={hasPrev}
+            onPageChange={onPageChange}
+          />
         </div>
       )}
 

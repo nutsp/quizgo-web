@@ -1,4 +1,13 @@
 import { apiDelete, apiGet, apiPost, apiPut } from "@/lib/api";
+import type { PaginatedResponse, PaginationParams } from "@/lib/api/pagination";
+
+function listQuery(params?: Record<string, string | number | undefined | null>): string {
+  if (!params) return "";
+  const entries = Object.entries(params)
+    .filter(([, v]) => v !== undefined && v !== null && v !== "")
+    .map(([k, v]) => [k, String(v)] as [string, string]);
+  return entries.length ? `?${new URLSearchParams(entries)}` : "";
+}
 
 export type AdminQuestionListItem = {
   id: string;
@@ -7,6 +16,12 @@ export type AdminQuestionListItem = {
     id: string;
     name: string;
   };
+  tags?: {
+    id: string;
+    name: string;
+    code: string;
+    color?: string;
+  }[];
   difficulty: "easy" | "medium" | "hard";
   status: "draft" | "published" | "archived";
   correct_choice_key?: "A" | "B" | "C" | "D";
@@ -36,18 +51,12 @@ export type ExamSetQuestionsSummary = {
   passing_score: number;
 };
 
-export type AvailableQuestionsResponse = {
-  items: AdminQuestionListItem[];
-  pagination: {
-    page: number;
-    limit: number;
-    total: number;
-  };
-};
+export type AvailableQuestionsResponse = PaginatedResponse<AdminQuestionListItem>;
 
 export type AssignedQuestionsResponse = {
   exam_set: ExamSetQuestionsSummary;
   items: AssignedExamQuestion[];
+  pagination: PaginatedResponse<AssignedExamQuestion>["pagination"];
   is_locked_by_attempts: boolean;
 };
 
@@ -61,15 +70,17 @@ export type BulkAddResponse = {
 };
 
 export const adminExamSetQuestionsApi = {
-  getAvailableQuestions: (examSetId: string, params?: Record<string, string>) => {
-    const query = params ? `?${new URLSearchParams(params)}` : "";
+  getAvailableQuestions: (examSetId: string, params?: PaginationParams & Record<string, string | number | undefined>) => {
     return apiGet<AvailableQuestionsResponse>(
-      `/admin/exam-sets/${examSetId}/available-questions${query}`,
+      `/admin/exam-sets/${examSetId}/available-questions${listQuery(params)}`,
       true
     );
   },
-  listAssignedQuestions: (examSetId: string) =>
-    apiGet<AssignedQuestionsResponse>(`/admin/exam-sets/${examSetId}/questions`, true),
+  listAssignedQuestions: (examSetId: string, params?: PaginationParams & Record<string, string | number | undefined>) =>
+    apiGet<AssignedQuestionsResponse>(
+      `/admin/exam-sets/${examSetId}/questions${listQuery(params)}`,
+      true
+    ),
   bulkAdd: (
     examSetId: string,
     input: { question_ids: string[]; score?: number; append_to_end?: boolean }

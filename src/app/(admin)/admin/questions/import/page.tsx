@@ -24,6 +24,7 @@ import {
   type ImportPreviewRow,
 } from "@/lib/api/admin/endpoints";
 import { toUserFriendlyError } from "@/lib/api";
+import { ImportJobsHistory } from "@/components/admin/questions/ImportJobsHistory";
 
 type ImportPhase = "idle" | "preview" | "success";
 
@@ -57,6 +58,7 @@ function PreviewRowItem({ row }: { row: ImportPreviewRow }) {
           </div>
         </td>
         <td className="p-3">{row.data.subject_code}</td>
+        <td className="p-3">{row.data.tags || "-"}</td>
         <td className="max-w-xs p-3">{row.data.question_text.slice(0, 60)}{row.data.question_text.length > 60 ? "…" : ""}</td>
         <td className="p-3">{row.data.correct_choice}</td>
         <td className="p-3">{row.data.difficulty ?? "medium"}</td>
@@ -67,7 +69,7 @@ function PreviewRowItem({ row }: { row: ImportPreviewRow }) {
       </tr>
       {expanded && (
         <tr className="border-b border-border bg-background/30">
-          <td colSpan={7} className="p-4">
+          <td colSpan={8} className="p-4">
             <div className="space-y-3 text-sm">
               <div>
                 <p className="font-medium text-foreground">คำถาม</p>
@@ -349,6 +351,7 @@ export default function QuestionImportPage() {
                 <tr className="border-b border-border bg-background text-left text-muted">
                   <th className="p-3">Row</th>
                   <th className="p-3">Subject</th>
+                  <th className="p-3">Tags</th>
                   <th className="p-3">Question preview</th>
                   <th className="p-3">Correct choice</th>
                   <th className="p-3">Difficulty</th>
@@ -394,6 +397,8 @@ export default function QuestionImportPage() {
           </Card>
         </>
       )}
+
+      <ImportJobsHistory />
     </div>
   );
 }

@@ -11,6 +11,7 @@ function getPageTitle(pathname: string): string {
   if (pathname.startsWith("/admin/exam-tracks")) return "สายการสอบ";
   if (pathname.startsWith("/admin/exam-sets")) return "ชุดข้อสอบ";
   if (pathname.startsWith("/admin/subjects")) return "หมวดวิชา";
+  if (pathname.startsWith("/admin/question-tags")) return "กลุ่มคำถาม";
   if (pathname.startsWith("/admin/questions/import")) return "นำเข้าคำถาม";
   if (pathname.startsWith("/admin/questions")) return "คลังคำถาม";
   return "ผู้ดูแลระบบ";

@@ -2,9 +2,28 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Clock, FileText, Loader2, Send, X } from "lucide-react";
-import { QuestionPanel } from "@/components/QuestionPanel";
-import { RealisticAnswerSheet } from "@/components/RealisticAnswerSheet";
+import { Clock, Loader2, Send, Volume2, VolumeX } from "lucide-react";
+import { AnswerSheetPanel } from "@/components/exam/AnswerSheetPanel";
+import {
+  QuestionPaperPanel,
+  type QuestionPaperMode,
+} from "@/components/exam/QuestionPaperPanel";
+import { RealisticOMRAnswerSheet } from "@/components/exam/omr/RealisticOMRAnswerSheet";
+import type { OMRAnswer } from "@/components/exam/omr/types";
+import {
+  defaultLayoutConfig,
+  normalizeLayoutConfig,
+} from "@/lib/exam/answerSheetLayout";
+import type { AnswerSheetLayoutConfig } from "@/lib/exam/answerSheetLayout";
+import {
+  Sheet,
+  SheetCloseButton,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -26,6 +45,8 @@ import {
 } from "@/lib/api/endpoints";
 import type { GetAttemptResponse } from "@/lib/api/types";
 import { useAuth } from "@/hooks/useAuth";
+import { useExamSoundSetting } from "@/hooks/useExamSoundSetting";
+import { playOMRFillSound } from "@/lib/audio/omrSound";
 import { labelToApiKey } from "@/lib/choices";
 import { cn, formatTime } from "@/lib/utils";
 
@@ -37,6 +58,14 @@ interface ExamTakingViewProps {
 
 function attemptStorageKey(slug: string) {
   return `attempt:${slug}`;
+}
+
+const QUESTION_PAPER_MODE_KEY = "exam-question-paper-mode";
+
+function readStoredQuestionPaperMode(): QuestionPaperMode {
+  if (typeof window === "undefined") return "focus";
+  const stored = localStorage.getItem(QUESTION_PAPER_MODE_KEY);
+  return stored === "paper" ? "paper" : "focus";
 }
 
 function getRemainingSeconds(data: GetAttemptResponse): number {
@@ -56,25 +85,62 @@ export function ExamTakingView({
 }: ExamTakingViewProps) {
   const router = useRouter();
   const { user } = useAuth();
+  const { enabled: soundEnabled, setEnabled: setSoundEnabled } = useExamSoundSetting();
   const resultSlug = routeSlug ?? examSetCode;
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [attemptId, setAttemptId] = useState<string | null>(initialAttemptId ?? null);
   const [examTitle, setExamTitle] = useState("");
+  const [layoutConfig, setLayoutConfig] = useState<AnswerSheetLayoutConfig>(
+    defaultLayoutConfig
+  );
   const [questions, setQuestions] = useState<Question[]>([]);
   const [currentQuestion, setCurrentQuestion] = useState(1);
   const [selectedAnswers, setSelectedAnswers] = useState<Record<number, ChoiceKey>>({});
   const [markedQuestions, setMarkedQuestions] = useState<number[]>([]);
   const [remainingSeconds, setRemainingSeconds] = useState(0);
   const [showSubmitDialog, setShowSubmitDialog] = useState(false);
-  const [showAnswerSheet, setShowAnswerSheet] = useState(false);
+  const [omrOpen, setOmrOpen] = useState(false);
+  const [questionPaperMode, setQuestionPaperMode] = useState<QuestionPaperMode>("focus");
   const [submitting, setSubmitting] = useState(false);
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved">("idle");
 
   const saveQueue = useRef(Promise.resolve());
+  const omrScrollRef = useRef<HTMLDivElement>(null);
 
   const totalQuestions = questions.length;
+
+  useEffect(() => {
+    setQuestionPaperMode(readStoredQuestionPaperMode());
+  }, []);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(min-width: 1280px)");
+    const lockBodyScroll = () => {
+      document.body.style.overflow = mediaQuery.matches ? "hidden" : "";
+    };
+    lockBodyScroll();
+    mediaQuery.addEventListener("change", lockBodyScroll);
+    return () => {
+      document.body.style.overflow = "";
+      mediaQuery.removeEventListener("change", lockBodyScroll);
+    };
+  }, []);
+
+  const handleQuestionPaperModeChange = useCallback((mode: QuestionPaperMode) => {
+    setQuestionPaperMode(mode);
+    localStorage.setItem(QUESTION_PAPER_MODE_KEY, mode);
+  }, []);
+
+  const scrollOmrToQuestion = useCallback((questionNo: number) => {
+    requestAnimationFrame(() => {
+      const row = omrScrollRef.current?.querySelector(
+        `[data-omr-row="${questionNo}"]`
+      );
+      row?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    });
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -116,6 +182,11 @@ export function ExamTakingView({
         const mapped = data.questions.map(mapApiQuestion);
         setAttemptId(data.attempt_id);
         setExamTitle(data.exam_set.title);
+        setLayoutConfig(
+          normalizeLayoutConfig(
+            data.exam_set.answer_sheet_layout ?? defaultLayoutConfig
+          )
+        );
         setQuestions(mapped);
         setRemainingSeconds(getRemainingSeconds(data));
         setSelectedAnswers(answersRecordToLabels(data.answers ?? {}));
@@ -161,28 +232,44 @@ export function ExamTakingView({
     [attemptId]
   );
 
-  const handleSelectAnswer = useCallback(
-    (choice: ChoiceKey) => {
+  const commitAnswerSelection = useCallback(
+    (questionNumber: number, choice: ChoiceKey) => {
+      let changed = false;
       setSelectedAnswers((prev) => {
-        const next = { ...prev, [currentQuestion]: choice };
-        return next;
+        changed = prev[questionNumber] !== choice;
+        return { ...prev, [questionNumber]: choice };
       });
-      persistAnswer(currentQuestion, choice);
+      persistAnswer(questionNumber, choice);
+      if (changed) {
+        playOMRFillSound(soundEnabled);
+      }
     },
-    [currentQuestion, persistAnswer]
+    [persistAnswer, soundEnabled]
   );
 
   const handleSheetSelectAnswer = useCallback(
     (questionNumber: number, choice: ChoiceKey) => {
-      setSelectedAnswers((prev) => ({ ...prev, [questionNumber]: choice }));
-      persistAnswer(questionNumber, choice);
+      commitAnswerSelection(questionNumber, choice);
     },
-    [persistAnswer]
+    [commitAnswerSelection]
   );
 
-  const handleNavigateToQuestion = useCallback((questionNumber: number) => {
-    setCurrentQuestion(questionNumber);
-  }, []);
+  const handleMobileSelectAnswer = useCallback(
+    (questionNumber: number, choice: ChoiceKey) => {
+      commitAnswerSelection(questionNumber, choice);
+      setCurrentQuestion(questionNumber);
+      setOmrOpen(false);
+    },
+    [commitAnswerSelection]
+  );
+
+  const handleNavigateToQuestion = useCallback(
+    (questionNumber: number) => {
+      setCurrentQuestion(questionNumber);
+      scrollOmrToQuestion(questionNumber);
+    },
+    [scrollOmrToQuestion]
+  );
 
   const handleToggleMark = useCallback(() => {
     setMarkedQuestions((prev) =>
@@ -221,21 +308,38 @@ export function ExamTakingView({
     [questions, currentQuestion]
   );
 
-  const sheetProps = {
+  const omrAnswers: OMRAnswer[] = useMemo(() => {
+    return Array.from({ length: totalQuestions }, (_, i) => {
+      const questionNo = i + 1;
+      return {
+        question_no: questionNo,
+        selected_choice_key: selectedAnswers[questionNo] ?? null,
+        marked: markedQuestions.includes(questionNo),
+      };
+    });
+  }, [totalQuestions, selectedAnswers, markedQuestions]);
+
+  const omrSheetProps = {
     examTitle,
     examSetCode: resultSlug,
-    candidateName: user?.display_name ?? "ผู้สอบ",
-    candidateId: "-",
+    candidateName: user?.display_name,
+    candidateNo: undefined as string | undefined,
     totalQuestions,
-    currentQuestion,
-    selectedAnswers,
-    markedQuestions,
+    currentQuestionNo: currentQuestion,
+    answers: omrAnswers,
+    layoutConfig,
+    onSelectQuestion: handleNavigateToQuestion,
     onSelectAnswer: handleSheetSelectAnswer,
-    onNavigateToQuestion: handleNavigateToQuestion,
-    answeredCount,
-    unansweredCount,
-    markedCount,
-    highlightUnanswered: showSubmitDialog,
+  };
+
+  const mobileOmrSheetProps = {
+    ...omrSheetProps,
+    onSelectAnswer: handleMobileSelectAnswer,
+  };
+
+  const openSubmitDialog = () => {
+    setOmrOpen(false);
+    setShowSubmitDialog(true);
   };
 
   if (loading) {
@@ -259,9 +363,15 @@ export function ExamTakingView({
   }
 
   return (
-    <div className="min-h-screen bg-background pb-24 lg:pb-6">
-      <div className="sticky top-0 z-30 border-b border-border bg-surface shadow-sm">
-        <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-x-4 gap-y-2 px-4 py-3">
+    <div
+      className={cn(
+        "flex flex-col bg-slate-50",
+        "min-h-screen pb-24",
+        "xl:fixed xl:inset-0 xl:z-30 xl:h-dvh xl:overflow-hidden xl:pb-0"
+      )}
+    >
+      <header className="shrink-0 border-b border-border bg-surface shadow-sm">
+        <div className="mx-auto flex w-full max-w-[1800px] flex-wrap items-center justify-between gap-x-4 gap-y-2 px-4 py-3 sm:px-6 lg:px-8">
           <div className="min-w-0 flex-1">
             <h1 className="truncate text-sm font-bold text-foreground md:text-base">
               {examTitle}
@@ -287,6 +397,24 @@ export function ExamTakingView({
             </div>
           </div>
 
+          <button
+            type="button"
+            onClick={() => setSoundEnabled(!soundEnabled)}
+            className="inline-flex h-10 shrink-0 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 text-sm font-medium text-slate-700 hover:bg-slate-50"
+            title="เสียงฝนคำตอบ"
+            aria-label={soundEnabled ? "ปิดเสียงฝนคำตอบ" : "เปิดเสียงฝนคำตอบ"}
+            aria-pressed={soundEnabled}
+          >
+            {soundEnabled ? (
+              <Volume2 className="h-4 w-4" aria-hidden="true" />
+            ) : (
+              <VolumeX className="h-4 w-4" aria-hidden="true" />
+            )}
+            <span className="hidden sm:inline">
+              {soundEnabled ? "เปิดเสียง" : "ปิดเสียง"}
+            </span>
+          </button>
+
           <div
             className={cn(
               "flex items-center gap-2 rounded-xl px-3 py-1.5 font-mono text-base font-bold md:px-4 md:py-2 md:text-lg",
@@ -302,89 +430,123 @@ export function ExamTakingView({
             ส่งคำตอบ
           </Button>
         </div>
-      </div>
+      </header>
 
-      <div className="mx-auto grid max-w-7xl gap-6 px-4 py-6 lg:grid-cols-[3fr_2fr]">
-        <QuestionPanel
-          question={currentQuestionData}
-          currentQuestion={currentQuestion}
-          totalQuestions={totalQuestions}
-          selectedAnswer={selectedAnswers[currentQuestion] ?? null}
-          isMarked={markedQuestions.includes(currentQuestion)}
-          onSelectAnswer={handleSelectAnswer}
-          onPrevious={handlePrevious}
-          onNext={handleNext}
-          onToggleMark={handleToggleMark}
-        />
+      <main className="min-h-0 flex-1 xl:overflow-hidden">
+        <div className="px-4 py-6 sm:px-6 lg:px-8 xl:hidden">
+          <QuestionPaperPanel
+            mode={questionPaperMode}
+            onModeChange={handleQuestionPaperModeChange}
+            questions={questions}
+            currentQuestionNo={currentQuestion}
+            markedQuestions={markedQuestions}
+            examTitle={examTitle}
+            onPrevious={handlePrevious}
+            onNext={handleNext}
+            onToggleMark={handleToggleMark}
+          />
+        </div>
 
-        <div className="hidden lg:block">
-          <div className="sticky top-[72px]">
-            <RealisticAnswerSheet {...sheetProps} />
+        <div className="hidden h-full xl:flex">
+          <div className="mx-auto flex h-full w-full max-w-[1800px] gap-6 px-6 py-6">
+            <section className="h-full min-w-0 flex-[3]">
+              <QuestionPaperPanel
+                className="h-full"
+                mode={questionPaperMode}
+                onModeChange={handleQuestionPaperModeChange}
+                questions={questions}
+                currentQuestionNo={currentQuestion}
+                markedQuestions={markedQuestions}
+                examTitle={examTitle}
+                onPrevious={handlePrevious}
+                onNext={handleNext}
+                onToggleMark={handleToggleMark}
+              />
+            </section>
+
+            <aside className="h-full min-w-0 flex-[2]">
+              <AnswerSheetPanel
+                className="h-full"
+                {...omrSheetProps}
+                variant="compact"
+                scrollContainerRef={omrScrollRef}
+              />
+            </aside>
           </div>
+        </div>
+      </main>
+
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white/95 p-3 backdrop-blur xl:hidden">
+        <div className="mx-auto flex max-w-lg items-center gap-3">
+          <div className="flex-1 text-sm text-slate-600">
+            ตอบแล้ว{" "}
+            <span className="font-bold text-teal-700">{answeredCount}</span>/{totalQuestions}
+          </div>
+          <Button onClick={() => setOmrOpen(true)} aria-label="ดูกระดาษคำตอบ">
+            ดูกระดาษคำตอบ
+          </Button>
         </div>
       </div>
 
-      <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-border bg-surface/95 p-3 backdrop-blur-md lg:hidden">
-        <Button
-          variant="outline"
-          className="w-full border-primary text-primary"
-          onClick={() => setShowAnswerSheet(true)}
-        >
-          <FileText className="h-4 w-4" />
-          เปิดกระดาษคำตอบ
-        </Button>
-      </div>
+      <Sheet open={omrOpen} onOpenChange={setOmrOpen}>
+        <SheetContent side="bottom" className="flex flex-col p-0 xl:hidden">
+          <SheetHeader className="shrink-0 border-b border-border px-4 py-3 pr-12">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <SheetTitle>กระดาษคำตอบ</SheetTitle>
+                <SheetDescription className="mt-1">
+                  กดค้างที่วงกลมเพื่อฝนคำตอบ
+                </SheetDescription>
+              </div>
+              <SheetCloseButton className="absolute right-3 top-3" />
+            </div>
+          </SheetHeader>
 
-      {showAnswerSheet && (
-        <div className="fixed inset-0 z-50 flex flex-col bg-background lg:hidden">
-          <div className="flex items-center justify-between border-b border-border bg-surface px-4 py-3">
-            <h2 className="text-sm font-bold text-foreground">กระดาษคำตอบ</h2>
-            <Button variant="ghost" size="icon" onClick={() => setShowAnswerSheet(false)}>
-              <X className="h-5 w-5" />
-            </Button>
-          </div>
-          <div className="flex min-h-0 flex-1 flex-col p-3">
-            <RealisticAnswerSheet
-              {...sheetProps}
-              className="flex min-h-0 flex-1 flex-col shadow-none"
-              scrollMaxHeight={null}
+          <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+            <RealisticOMRAnswerSheet
+              {...mobileOmrSheetProps}
+              variant="mobile"
+              showSummary={false}
+              className="min-h-0 flex-1"
             />
           </div>
-          <div className="border-t border-border bg-surface p-3">
-            <Button className="w-full" onClick={() => setShowAnswerSheet(false)}>
-              กลับไปทำข้อสอบ
+
+          <SheetFooter className="shrink-0 border-t border-border px-4 py-3">
+            <Button className="w-full" onClick={openSubmitDialog}>
+              <Send className="h-4 w-4" />
+              ส่งคำตอบ
             </Button>
-          </div>
-        </div>
-      )}
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
 
       <Dialog open={showSubmitDialog} onOpenChange={setShowSubmitDialog}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>ยืนยันการส่งคำตอบ?</DialogTitle>
+            <DialogTitle>ยืนยันการส่งคำตอบ</DialogTitle>
           </DialogHeader>
           <div className="space-y-3 text-sm text-muted">
-            <div className="grid grid-cols-3 gap-3 rounded-xl bg-background p-4">
-              <div className="text-center">
-                <p className="font-mono text-xl font-bold text-success">{answeredCount}</p>
-                <p className="text-xs">ตอบแล้ว</p>
-              </div>
-              <div className="text-center">
-                <p className="font-mono text-xl font-bold text-danger">{unansweredCount}</p>
-                <p className="text-xs">ยังไม่ตอบ</p>
-              </div>
-              <div className="text-center">
-                <p className="font-mono text-xl font-bold text-accent">{markedCount}</p>
-                <p className="text-xs">ทำเครื่องหมาย</p>
-              </div>
+            <div className="space-y-2 rounded-xl border border-border bg-background p-4 text-foreground">
+              <p>
+                ตอบแล้ว: <strong>{answeredCount}</strong> ข้อ
+              </p>
+              <p>
+                ยังไม่ตอบ: <strong>{unansweredCount}</strong> ข้อ
+              </p>
+              <p>
+                ทำเครื่องหมายไว้: <strong>{markedCount}</strong> ข้อ
+              </p>
             </div>
+            <p className="text-xs leading-relaxed text-foreground">
+              กรุณาตรวจสอบกระดาษคำตอบก่อนส่ง
+            </p>
             <p className="rounded-lg border border-warning/30 bg-warning/5 p-3 text-xs leading-relaxed text-foreground">
-              หากส่งคำตอบแล้วจะไม่สามารถกลับมาแก้ไขได้
+              เมื่อส่งคำตอบแล้วจะไม่สามารถกลับมาแก้ไขได้
             </p>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowSubmitDialog(false)}>
-              กลับไปทำต่อ
+              ยกเลิก
             </Button>
             <Button onClick={handleSubmit} disabled={submitting}>
               {submitting ? "กำลังส่ง..." : "ส่งคำตอบ"}

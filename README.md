@@ -1,6 +1,6 @@
-# สนามสอบเสมือนจริง — Realistic Virtual Exam Simulation Demo
+# ควิซโก (QuizGo) — Realistic Virtual Exam Simulation
 
-แพลตฟอร์มจำลองสอบเสมือนจริง (Demo) สร้างด้วย Next.js App Router เชื่อมต่อ Backend API
+แพลตฟอร์มซ้อมสอบเสมือนจริง (Demo) สร้างด้วย Next.js App Router เชื่อมต่อ Backend API
 
 ## Tech Stack
 

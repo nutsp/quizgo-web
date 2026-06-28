@@ -12,20 +12,22 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { BrandLogo } from "@/components/brand/BrandLogo";
 import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
 
 const guestLinks = [
   { href: "/", label: "หน้าแรก" },
   { href: "/exams", label: "คลังข้อสอบ" },
-  { href: "#", label: "ราคา" },
+  { href: "/pricing", label: "แพ็กเกจ" },
 ];
 
 const authLinks = [
   { href: "/", label: "หน้าแรก" },
   { href: "/exams", label: "คลังข้อสอบ" },
+  { href: "/my-exams", label: "ข้อสอบของฉัน" },
   { href: "/my-results", label: "ผลสอบของฉัน" },
-  { href: "#", label: "ราคา" },
+  { href: "/pricing", label: "แพ็กเกจ" },
 ];
 
 function getNavDisplayName(user: { display_name?: string } | null): string {
@@ -67,12 +69,7 @@ export function Navbar() {
     <header className="sticky top-0 z-40 border-b border-border bg-surface/95 backdrop-blur-md">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 lg:px-8">
         <div className="flex items-center gap-8">
-          <Link href="/" className="flex items-center gap-2">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-sm font-bold text-white">
-              ส
-            </div>
-            {/* <span className="text-lg font-bold text-primary">สนามสอบเสมือนจริง</span> */}
-          </Link>
+          <BrandLogo variant="text" size="md" href="/" />
 
           <nav className="hidden items-center gap-1 lg:flex">
             {navLinks.map((link) => (
@@ -82,7 +79,8 @@ export function Navbar() {
                 className={cn(
                   "rounded-lg px-3 py-2 text-sm font-medium transition-colors hover:bg-background hover:text-primary",
                   pathname === link.href ||
-                  (link.href === "/my-results" && pathname.startsWith("/my-results"))
+                  (link.href === "/my-results" && pathname.startsWith("/my-results")) ||
+                  (link.href === "/my-exams" && pathname.startsWith("/my-exams"))
                     ? "bg-primary/10 text-primary"
                     : "text-muted"
                 )}
@@ -126,6 +124,9 @@ export function Navbar() {
                       <User className="h-4 w-4" />
                       โปรไฟล์ของฉัน
                     </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/my-exams">ข้อสอบของฉัน</Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
                     <Link href="/my-results">ผลสอบของฉัน</Link>
@@ -176,7 +177,8 @@ export function Navbar() {
               className={cn(
                 "block rounded-lg px-3 py-2.5 text-sm font-medium",
                 pathname === link.href ||
-                  (link.href === "/my-results" && pathname.startsWith("/my-results"))
+                  (link.href === "/my-results" && pathname.startsWith("/my-results")) ||
+                  (link.href === "/my-exams" && pathname.startsWith("/my-exams"))
                   ? "bg-primary/10 text-primary"
                   : "text-muted"
               )}
